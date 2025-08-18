@@ -33,6 +33,7 @@ int main() {
             execvp(args[0], args);
 
             perror("exec failed");
+            _exit(1);
         }
         else {
             fprintf(stderr, "Fork failed.\n");
