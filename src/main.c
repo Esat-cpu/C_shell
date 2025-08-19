@@ -20,6 +20,7 @@ int main() {
 
         command[strcspn(command, "\n")] = 0;
         if (strcmp(command, "exit") == 0) break;
+        if (strlen(command) == 0) continue;
 
         pid_t pid = fork();
 
