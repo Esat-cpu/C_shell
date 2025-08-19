@@ -1,5 +1,7 @@
 # C_shell
 
+A simple shell that is written in C.
+
 ---
 
 ## Compilation
