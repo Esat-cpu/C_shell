@@ -4,14 +4,19 @@
 #include <stdlib.h>
 #include <sys/wait.h>
 
-#define MAX 4096
 
 int main() {
-    char command[MAX];
+    char* command = NULL;
+    size_t size = 0;
 
     while (1) {
         printf("shell> ");
-        if (!fgets(command, MAX, stdin)) break;
+        ssize_t len = getline(&command, &size, stdin);
+
+        if (len == -1) {
+            break;
+        }
+
         command[strcspn(command, "\n")] = 0;
         if (strcmp(command, "exit") == 0) break;
 
@@ -21,10 +26,10 @@ int main() {
             wait(NULL);
         }
         else if (pid == 0) {
-            char* args[32];
+            char* args[64];
             int i = 0;
             char* token = strtok(command, " ");
-            while (token != NULL && i < 32) {
+            while (token != NULL && i < 63) {
                 args[i++] = token;
                 token = strtok(NULL, " ");
             }
@@ -39,6 +44,7 @@ int main() {
             fprintf(stderr, "Fork failed.\n");
         }
     }
+    free(command);
 
     return 0;
 }
