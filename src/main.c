@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/wait.h>
+#include "trim.h"
 
 
 int main() {
@@ -18,7 +19,7 @@ int main() {
             break;
         }
 
-        command[strcspn(command, "\n")] = 0;
+        trim(command);
         if (strcmp(command, "exit") == 0) break;
         if (strlen(command) == 0) continue;
 
@@ -46,6 +47,7 @@ int main() {
             fprintf(stderr, "Fork failed.\n");
         }
     }
+
     free(command);
 
     return 0;
