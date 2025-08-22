@@ -85,6 +85,13 @@ int main() {
         }
 
 
+        // pwd command
+        if (strcmp(args[0], "pwd") == 0) {
+            printf("%s\n", cwd);
+            continue;
+        }
+
+
 
         int status;
         pid_t pid = fork();
