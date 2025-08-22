@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <errno.h>
 #include <sys/wait.h>
 #include "trim.h"
 
@@ -23,7 +24,7 @@ int main() {
 
     if (getcwd(cwd, sizeof(cwd)) == NULL) {
         perror("getcwd");
-        exit(1);
+        exit(errno);
     }
     strcpy(last_dir, cwd);
 
@@ -33,7 +34,7 @@ int main() {
         ssize_t len = getline(&command, &size, stdin);
 
         if (len == -1) {
-            exit(1);
+            exit(errno);
         }
 
         // trimming spaces at the start and end of the command
@@ -116,7 +117,7 @@ int cd_handle(char** args, char* cwd, char* last_dir) {
     char *new_path = malloc(PATH_MAX);
     if (new_path == NULL) {
         perror("cd: malloc fail");
-        return 12;
+        return ENOMEM;
     }
     *new_path = '\0';
 
@@ -142,12 +143,13 @@ int cd_handle(char** args, char* cwd, char* last_dir) {
     if (chdir(new_path) == -1) {
         perror("cd");
         free(new_path);
-        return 2;
+        return errno;
     } else {
         strcpy(last_dir, cwd);
         if (getcwd(cwd, PATH_MAX) == NULL) {
             perror("cd");
-            return 3;
+            free(new_path);
+            return errno;
         }
         free(new_path);
     }
