@@ -1,6 +1,6 @@
 # C_shell
 
-A simple shell that is written in C.
+A simple Linux shell that is written in C.
 
 ---
 
