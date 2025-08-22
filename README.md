@@ -7,7 +7,7 @@ A simple Linux shell that is written in C.
 ## Compilation
 
 ```bash
-gcc -Iinclude src/trim.c src/main.c -o shell
+gcc -Iinclude src/* -o shell
 ```
 
 Execute:
