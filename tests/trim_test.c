@@ -18,9 +18,9 @@ static void run_trim_test(void) {
     };
 
     size_t total = sizeof(cases) / sizeof(cases[0]);
-    int success = 0;
+    size_t success = 0;
 
-    for (int i = 0; i < total; i++) {
+    for (unsigned i = 0; i < total; i++) {
         char buffer[128];
         strcpy(buffer, cases[i].input);
 
@@ -29,13 +29,13 @@ static void run_trim_test(void) {
         if (strcmp(buffer, cases[i].expected) == 0) {
             success++;
         } else {
-            fprintf(stderr, "[!] Trim failed: \"%s\" -> \"%s\"\nExpected: \"%s\"\n"
+            fprintf(stderr, "[!] Trim failed: \"%s\" -> \"%s\"\nExpected: \"%s\"\n",
                     cases[i].input, buffer, cases[i].expected);
         }
     }
 
     if (success == total)
-            printf("[OK] Trim test successful.\n")
+            printf("[OK] Trim test successful.\n");
 }
 
 int main() {

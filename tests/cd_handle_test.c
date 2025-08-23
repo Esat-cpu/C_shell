@@ -54,16 +54,14 @@ static void run_cd_handle_test( void ) {
 
     size_t total = sizeof(cases) / sizeof(cases[0]);
 
-    for (int i = 0; i < total; i++) {
+    for (unsigned i = 0; i < total; i++) {
         int status = cd_handle(cases[i].input, cwd, last_dir);
 
         if (
-            strcmp(cwd, cases[i].expected_cwd) == 0 &&
-            strcmp(last_dir, cases[i].expected_last_dir) == 0 &&
-            status == cases[i].expected_code
+            strcmp(cwd, cases[i].expected_cwd) != 0 ||
+            strcmp(last_dir, cases[i].expected_last_dir) != 0 ||
+            status != cases[i].expected_code
         ) {
-            printf(".\n");
-        } else {
             printf("[!] cd failed with %s.\n", cases[i].desc);
             return;
         }
