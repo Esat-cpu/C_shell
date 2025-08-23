@@ -31,6 +31,7 @@ int main() {
 
     while (1) {
         printf("shell %s > ", cwd);
+        fflush(stdout);
         ssize_t len = getline(&command, &size, stdin);
 
         if (len == -1) {
