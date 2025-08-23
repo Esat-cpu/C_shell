@@ -13,7 +13,7 @@ cd C_shell
 
 ## Compilation
 
-To build the shell run:
+To build the shell, run:
 ```bash
 make
 ```
