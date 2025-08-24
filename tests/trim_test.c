@@ -8,13 +8,15 @@ struct TrimTestCase {
     char expected[128];
 };
 
+// for adding more tests edit here
 static void run_trim_test(void) {
     struct TrimTestCase cases[] = {
         {"   exit ", "exit"},
         {"exit", "exit"},
         {"   ", ""},
         {"", ""},
-        {"   hello  world  ", "hello  world"}
+        {"   hello  world  ", "hello  world"},
+        {"test\n", "test"}
     };
 
     size_t total = sizeof(cases) / sizeof(cases[0]);

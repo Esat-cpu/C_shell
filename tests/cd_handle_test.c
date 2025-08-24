@@ -36,20 +36,26 @@ static void run_cd_handle_test( void ) {
     strcpy(last_dir, first_dir);
 
 
+    // for adding more tests edit here
     char* cmd1[] = {"cd", home, NULL};
     char* cmd2[] = {"cd", "/", NULL};
     char* cmd3[] = {"cd", "asdf", "asdf", NULL};
     char* cmd4[] = {"cd", "home", NULL};
     char* cmd5[] = {"cd", "-", NULL};
     char* cmd6[] = {"cd", NULL};
+    char* cmd7[] = {"cd", "../..", NULL};
+    char* cmd8[] = {"cd", "~", NULL};
 
-    struct CdTestCase cases[] = {
+    //+ and here
+    struct CdTestCase cases[] = { // command, expected cwd, last_dir, exit code
         {cmd1, home, first_dir, 0, "an absolute path"},
         {cmd2, "/", home, 0,       "root dir"},
         {cmd3, "/", home, 1,       "too many args"},
         {cmd4, "/home", "/", 0,    "dir name"},
         {cmd5, "/", "/home", 0,    "previous dir with arg -"},
-        {cmd6, home, "/", 0,       "no args"}
+        {cmd6, home, "/", 0,       "no args"},
+        {cmd7, "/", home, 0,       "double dot for parent dir"},
+        {cmd8, home, "/", 0,       "tilde for home dir"}
     };
 
     size_t total = sizeof(cases) / sizeof(cases[0]);
