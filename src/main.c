@@ -153,6 +153,7 @@ int main() {
                         }
                         else {
                             fprintf(stderr, "Fork failed.\n");
+                            exit_code = 1;
                         }
                     }
                 }
