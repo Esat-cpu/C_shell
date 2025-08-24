@@ -15,8 +15,14 @@
 #endif
 
 
+char* command = NULL;
+
+void clean_exit( void ) {
+    if (command) free(command);
+}
+
 int main() {
-    char* command = NULL;
+    atexit(clean_exit);
     size_t size;
     int exit_code = 0;
     char cwd[PATH_MAX];
