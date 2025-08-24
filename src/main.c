@@ -134,7 +134,7 @@ int main() {
                             saved_out = dup(file_no);
                             if (saved_out < 0) {
                                 perror("dup");
-                                exit_code = 1;
+                                exit_code = errno;
                                 break;
                             }
 

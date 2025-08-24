@@ -13,6 +13,7 @@
 
 // cd command
 int cd_handle(char** args, char* cwd, char* last_dir) {
+    char* home = getenv("HOME");
     char *new_path = malloc(PATH_MAX);
     if (new_path == NULL) {
         perror("cd: malloc fail");
@@ -21,7 +22,7 @@ int cd_handle(char** args, char* cwd, char* last_dir) {
     *new_path = '\0';
 
     if (args[1] == NULL) { //if no args
-        strcpy(new_path, getenv("HOME"));
+        strcpy(new_path, home);
     } else if (args[2] != NULL) { // too many args
         fprintf(stderr, "Too many arguments for cd.\n");
         free(new_path);
@@ -36,6 +37,8 @@ int cd_handle(char** args, char* cwd, char* last_dir) {
 
     if (*new_path == '\0')
         strcpy(new_path, args[1]);
+    if (new_path[0] == '~')
+        snprintf(new_path, PATH_MAX, "%s%s", home, args[1] + 1);
 
 
     //change dir
