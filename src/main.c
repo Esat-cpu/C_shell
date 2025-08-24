@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <sys/wait.h>
 
 #include "trim.h"
@@ -90,6 +91,7 @@ int main() {
     
         // commnad chain
         int cmd_start = 0;
+        int fd, saved_stdout, redir = 0;
         for (int j = 0; j <= i; j++) {
             // if j equals i (end of the command(s)) or the index of an operator like '&&' or '||'
             if (j == i || (args[j] != NULL && (strcmp(args[j], "&&") == 0 || strcmp(args[j], "||") == 0))) {
@@ -97,10 +99,32 @@ int main() {
                     char* current_args[64];
                     int k;
                     for (k = 0; k < (j - cmd_start); k++) {
-                        current_args[k] = args[cmd_start + k];
+                        int index = cmd_start + k;
+                        // if > or >> used
+                        if (strcmp(args[index], ">") == 0 || strcmp(args[index], ">>") == 0) {
+                            if (args[index + 1] == NULL || strcmp(args[index + 1], ">") == 0 || strcmp(args[index + 1], ">>") == 0) {
+                                fprintf(stderr, "Redirect error.\n");
+                                break;
+                            }
+                            redir = 1;
+                            saved_stdout = dup(STDOUT_FILENO);
+                            if (saved_stdout < 0) {
+                                perror("dup");
+                                break;
+                            }
+                            if (strcmp(args[index], ">") == 0) {
+                                fd = open(args[index + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+                            }
+                            if (strcmp(args[index], ">>") == 0) {
+                                fd = open(args[index + 1], O_WRONLY | O_CREAT | O_APPEND, 0644);
+                            }
+                            dup2(fd, STDOUT_FILENO);
+                            close(fd);
+                            break;
+                        }
+                        current_args[k] = args[index];
                     }
                     current_args[k] = NULL;
-
 
                     // cd command
                     if (strcmp(current_args[0], "cd") == 0) {
@@ -148,6 +172,11 @@ int main() {
                 }
 
                 cmd_start = j + 1;
+            }
+            if (redir) {
+                dup2(saved_stdout, STDOUT_FILENO);
+                close(saved_stdout);
+                redir = 0;
             }
         }
     }
