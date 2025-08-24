@@ -51,7 +51,7 @@ int main() {
             args[i++] = token;
             token = strtok(NULL, " ");
         }
-        args[i] = NULL;
+        args[i] = NULL; // i is now end of the command(s)
 
 
         // exit command
@@ -78,39 +78,68 @@ int main() {
             exit(exit_code);
         }
 
+    
+        // commnad chain
+        int cmd_start = 0;
+        for (int j = 0; j <= i; j++) {
+            // if j equals i (end of the command(s)) or the index of an operator like '&&' or '||'
+            if (j == i || (args[j] != NULL && (strcmp(args[j], "&&") == 0 || strcmp(args[j], "||") == 0))) {
+                if (cmd_start < j) {
+                    char* current_args[64];
+                    int k;
+                    for (k = 0; k < (j - cmd_start); k++) {
+                        current_args[k] = args[cmd_start + k];
+                    }
+                    current_args[k] = NULL;
 
-        // cd command
-        if (strcmp(args[0], "cd") == 0) {
-            exit_code = cd_handle(args, cwd, last_dir);
-            continue;
-        }
 
+                    // cd command
+                    if (strcmp(current_args[0], "cd") == 0) {
+                        exit_code = cd_handle(current_args, cwd, last_dir);
+                    }
+                    // pwd command
+                    else if (strcmp(current_args[0], "pwd") == 0) {
+                        printf("%s\n", cwd);
+                        exit_code = 0;
+                    }
+                    else {
+                        // execute command
+                        int status;
+                        pid_t pid = fork();
 
-        // pwd command
-        if (strcmp(args[0], "pwd") == 0) {
-            printf("%s\n", cwd);
-            continue;
-        }
+                        if (pid > 0) {
+                            wait(&status);
+                            if (WIFEXITED(status))
+                                exit_code = WEXITSTATUS(status);
+                        }
+                        else if (pid == 0) {
+                            execvp(current_args[0], current_args);
 
+                            perror(current_args[0]);
+                            _exit(127);
+                        }
+                        else {
+                            fprintf(stderr, "Fork failed.\n");
+                        }
+                    }
+                }
 
+                else {
+                    fprintf(stderr, "Unexpected operator.\n");
+                    exit_code = 1;
+                    break;
+                }
 
-        int status;
-        pid_t pid = fork();
+                if (j < i && args[j] != NULL) {
+                    if (strcmp(args[j], "&&") == 0 && exit_code != 0) {
+                        break;
+                    } else if (strcmp(args[j], "||") == 0 && exit_code == 0) {
+                        break;
+                    }
+                }
 
-        if (pid > 0) {
-            wait(&status);
-            if (WIFEXITED(status)) {
-                exit_code = WEXITSTATUS(status);
+                cmd_start = j + 1;
             }
-        }
-        else if (pid == 0) {
-            execvp(args[0], args);
-
-            perror(args[0]);
-            _exit(127);
-        }
-        else {
-            fprintf(stderr, "Fork failed.\n");
         }
     }
 
