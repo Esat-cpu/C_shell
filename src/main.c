@@ -91,36 +91,53 @@ int main() {
     
         // commnad chain
         int cmd_start = 0;
-        int fd, saved_stdout, redir = 0;
+        int fd, saved_out, file_no, redir = 0; // variables for redirection
         for (int j = 0; j <= i; j++) {
             // if j equals i (end of the command(s)) or the index of an operator like '&&' or '||'
-            if (j == i || (args[j] != NULL && (strcmp(args[j], "&&") == 0 || strcmp(args[j], "||") == 0))) {
+            if (j == i ||
+               (args[j] != NULL && (strcmp(args[j], "&&") == 0 || strcmp(args[j], "||") == 0))) {
                 if (cmd_start < j) {
                     char* current_args[64];
                     int k;
                     for (k = 0; k < (j - cmd_start); k++) {
                         int index = cmd_start + k;
-                        // if > or >> used
-                        if (strcmp(args[index], ">") == 0 || strcmp(args[index], ">>") == 0) {
-                            if (args[index + 1] == NULL || strcmp(args[index + 1], ">") == 0 || strcmp(args[index + 1], ">>") == 0) {
+                        // if >, >>, 2> or 2>> used
+                        if (strcmp(args[index], ">") == 0 ||
+                            strcmp(args[index], ">>") == 0 ||
+                            strcmp(args[index], "2>") == 0 ||
+                            strcmp(args[index], "2>>") == 0) {
+                            if (args[index + 1] == NULL ||
+                                strcmp(args[index + 1], ">") == 0 ||
+                                strcmp(args[index + 1], ">>") == 0) {
                                 fprintf(stderr, "Redirect error.\n");
+                                exit_code = 2;
                                 break;
                             }
                             redir = 1;
-                            saved_stdout = dup(STDOUT_FILENO);
-                            if (saved_stdout < 0) {
+
+
+                            if (strcmp(args[index], ">") == 0 || strcmp(args[index], ">>") == 0) {
+                                file_no = STDOUT_FILENO;
+                            } else {
+                                file_no = STDERR_FILENO;
+                            }
+
+                            saved_out = dup(file_no);
+                            if (saved_out < 0) {
                                 perror("dup");
+                                exit_code = 1;
                                 break;
                             }
-                            if (strcmp(args[index], ">") == 0) {
+
+                            if (strcmp(args[index], ">") == 0 || strcmp(args[index], "2>") == 0) {
                                 fd = open(args[index + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-                            }
-                            if (strcmp(args[index], ">>") == 0) {
+                            } else {
                                 fd = open(args[index + 1], O_WRONLY | O_CREAT | O_APPEND, 0644);
                             }
-                            dup2(fd, STDOUT_FILENO);
+
+                            dup2(fd, file_no);
                             close(fd);
-                            break;
+                            break; // things after that isn't command
                         }
                         current_args[k] = args[index];
                     }
@@ -174,9 +191,10 @@ int main() {
 
                 cmd_start = j + 1;
             }
+            // if redirection used
             if (redir) {
-                dup2(saved_stdout, STDOUT_FILENO);
-                close(saved_stdout);
+                dup2(saved_out, file_no);
+                close(saved_out);
                 redir = 0;
             }
         }
