@@ -29,8 +29,11 @@ int main() {
     strcpy(last_dir, cwd);
 
 
+    char* user = getenv("USER");
+    if (user == NULL) user = "shell";
+
     while (1) {
-        printf("shell %s > ", cwd);
+        printf("%s %s > ", user, cwd);
         fflush(stdout);
         ssize_t len = getline(&command, &size, stdin);
 
