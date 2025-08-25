@@ -6,6 +6,7 @@
 #include <limits.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <glob.h>
 #include <sys/wait.h>
 
 #include "trim.h"
@@ -79,14 +80,34 @@ int main() {
 
         // tokenize
         char* args[MAX_ARGS];
+        int index_of_dup[MAX_ARGS];
+        int dup_count = 0;
         int i = 0;
         char* token = strtok(command, " ");
+        glob_t result;
+
         while (token != NULL && i < MAX_ARGS - 1) {
             if (token[0] == '$') {
                 token = getenv(token + 1);
                 if (token == NULL) token = "";
             }
-            args[i++] = token;
+            // if there are glob characters
+            if (strchr(token, '*') || strchr(token, '?') || strchr(token, '[')) {
+                if (glob(token, 0, NULL, &result) == 0) {
+                    for (size_t ind = 0; ind < result.gl_pathc; ind++) {
+                        if (i < MAX_ARGS - 1) {
+                            index_of_dup[dup_count++] = i;
+                            args[i++] = strdup(result.gl_pathv[ind]);
+                        }
+                        else break;
+                    }
+                    globfree(&result);
+                } else { // Glob failed, use original token
+                    args[i++] = token;
+                }
+            } else {
+                args[i++] = token;
+            }
             token = strtok(NULL, " ");
         }
         args[i] = NULL; // i is now end of the command(s)
@@ -201,6 +222,13 @@ int main() {
                             exit_code = 1;
                         }
                     }
+
+                    // if redirection is used
+                    if (redir) {
+                        dup2(saved_out, file_no);
+                        close(saved_out);
+                        redir = 0;
+                    }
                 }
 
                 else {
@@ -219,12 +247,10 @@ int main() {
 
                 cmd_start = j + 1;
             }
-            // if redirection used
-            if (redir) {
-                dup2(saved_out, file_no);
-                close(saved_out);
-                redir = 0;
-            }
+        } // end of command chain
+
+        for (int f = 0; f < dup_count; f++) {
+            free(args[index_of_dup[f]]);
         }
     }
 
