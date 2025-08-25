@@ -29,6 +29,17 @@ int main() {
     char cwd[PATH_MAX];
     char last_dir[PATH_MAX];
 
+    char *shell_path = malloc(PATH_MAX);
+    ssize_t leng;
+    if (shell_path != NULL) {
+        leng = readlink("/proc/self/exe", shell_path, PATH_MAX - 1);
+        if (leng != -1) {
+            shell_path[leng] = '\0';
+            setenv("SHELL", shell_path, 1);
+        }
+    }
+    free(shell_path);
+
     if (getcwd(cwd, sizeof(cwd)) == NULL) {
         perror("getcwd");
         exit(errno);
