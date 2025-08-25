@@ -54,16 +54,18 @@ int main() {
     if (user == NULL) user = "shell";
 
     while (1) {
-        char prmpt_cwd[PATH_MAX];
-        if (strncmp(cwd, home, strlen(home)) == 0)
-            snprintf(prmpt_cwd, PATH_MAX, "~%s", cwd + strlen(home));
-        else
-            strcpy(prmpt_cwd, cwd);
-        if (exit_code == 0)
-            printf("\033[1;32m%s \033[1;34m%s\033[0m> ", user, prmpt_cwd);
-        else
-            printf("\033[1;32m%s \033[1;34m%s \033[1;31m[%d]\033[0m> ", user, prmpt_cwd, exit_code);
-        fflush(stdout);
+        if (isatty(STDIN_FILENO)) {
+            char prmpt_cwd[PATH_MAX];
+            if (strncmp(cwd, home, strlen(home)) == 0)
+                snprintf(prmpt_cwd, PATH_MAX, "~%s", cwd + strlen(home));
+            else
+                strcpy(prmpt_cwd, cwd);
+            if (exit_code == 0)
+                printf("\033[1;32m%s \033[1;34m%s\033[0m> ", user, prmpt_cwd);
+            else
+                printf("\033[1;32m%s \033[1;34m%s \033[1;31m[%d]\033[0m> ", user, prmpt_cwd, exit_code);
+            fflush(stdout);
+        }
         ssize_t len = getline(&command, &size, stdin);
 
         if (len == -1) {
