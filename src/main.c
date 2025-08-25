@@ -11,6 +11,8 @@
 #include "trim.h"
 #include "cd_handle.h"
 
+#define MAX_ARGS 64
+
 #ifndef PATH_MAX
 #define PATH_MAX 4096
 #endif
@@ -74,10 +76,10 @@ int main() {
 
 
         // tokenize
-        char* args[64];
+        char* args[MAX_ARGS];
         int i = 0;
         char* token = strtok(command, " ");
-        while (token != NULL && i < 63) {
+        while (token != NULL && i < MAX_ARGS - 1) {
             if (token[0] == '$') {
                 token = getenv(token + 1);
                 if (token == NULL) token = "";
@@ -121,7 +123,7 @@ int main() {
             if (j == i ||
                (args[j] != NULL && (strcmp(args[j], "&&") == 0 || strcmp(args[j], "||") == 0))) {
                 if (cmd_start < j) {
-                    char* current_args[64];
+                    char* current_args[MAX_ARGS];
                     int k;
                     for (k = 0; k < (j - cmd_start); k++) {
                         int index = cmd_start + k;
