@@ -67,6 +67,10 @@ int main() {
         int i = 0;
         char* token = strtok(command, " ");
         while (token != NULL && i < 63) {
+            if (token[0] == '$') {
+                token = getenv(token + 1);
+                if (token == NULL) token = "";
+            }
             args[i++] = token;
             token = strtok(NULL, " ");
         }
@@ -110,7 +114,7 @@ int main() {
                     int k;
                     for (k = 0; k < (j - cmd_start); k++) {
                         int index = cmd_start + k;
-                        // if >, >>, 2> or 2>> used
+                        // if >, >>, 2> or 2>> is used
                         if (strcmp(args[index], ">") == 0 ||
                             strcmp(args[index], ">>") == 0 ||
                             strcmp(args[index], "2>") == 0 ||
