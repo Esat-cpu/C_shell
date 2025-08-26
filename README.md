@@ -11,7 +11,7 @@ git clone https://github.com/Esat-cpu/C_shell
 cd C_shell
 ```
 
-if you don't have readline lib:
+if you don't have the readline lib:
 ```bash
 # for debian/ubuntu
 sudo apt install libreadline-dev
