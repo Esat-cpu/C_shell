@@ -7,6 +7,8 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <glob.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 #include <sys/wait.h>
 
 #include "trim.h"
@@ -27,7 +29,6 @@ void clean_exit( void ) {
 
 int main() {
     atexit(clean_exit);
-    size_t size;
     int exit_code = 0;
     char cwd[PATH_MAX];
     char last_dir[PATH_MAX];
@@ -56,26 +57,38 @@ int main() {
 
     while (1) {
         if (isatty(STDIN_FILENO)) {
+            int prmpt_size = PATH_MAX + strlen(user) + 10;
+            char* prompt = malloc(prmpt_size);
             char prmpt_cwd[PATH_MAX];
             if (strncmp(cwd, home, strlen(home)) == 0)
                 snprintf(prmpt_cwd, PATH_MAX, "~%s", cwd + strlen(home));
             else
                 strcpy(prmpt_cwd, cwd);
             if (exit_code == 0)
-                printf("\033[1;32m%s \033[1;34m%s\033[0m> ", user, prmpt_cwd);
+                snprintf(prompt, prmpt_size, "\033[1;32m%s \033[1;34m%s\033[0m> ", user, prmpt_cwd);
             else
-                printf("\033[1;32m%s \033[1;34m%s \033[1;31m[%d]\033[0m> ", user, prmpt_cwd, exit_code);
-            fflush(stdout);
-        }
-        ssize_t len = getline(&command, &size, stdin);
+                snprintf(prompt, prmpt_size, "\033[1;32m%s \033[1;34m%s \033[1;31m[%d]\033[0m> ", user, prmpt_cwd, exit_code);
 
-        if (len == -1) {
-            exit(errno);
+            if (command) free(command);
+            command = readline(prompt);
+            free(prompt);
+            if (!command) {
+                perror("readline"); exit(errno);
+            }
+        } else {
+            size_t size = 0;
+            ssize_t len = getline(&command, &size, stdin);
+            if (len == -1) {
+                if (errno == ENOTTY) break;
+                perror("getline"); exit(errno);
+            }
         }
+
 
         // trimming spaces at the start and end of the command
         trim(command);
-        if (strlen(command) == 0) continue;
+        if (!*command) continue;
+        else add_history(command);
 
 
         // tokenize
@@ -281,8 +294,6 @@ int main() {
             free(args[index_of_dup[f]]);
         }
     }
-
-    free(command);
 
     return 0;
 }

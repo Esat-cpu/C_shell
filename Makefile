@@ -8,7 +8,7 @@ INCDIR = include
 all: $(TARGET)
 
 $(TARGET): $(SRCDIR)/*.c $(INCDIR)/*.h
-	$(CC) $(CFLAGS) $(SRCDIR)/*.c -o $(TARGET)
+	$(CC) $(CFLAGS) $(SRCDIR)/*.c -lreadline -o $(TARGET)
 
 test_cd_handle: $(TESTDIR)/cd_handle_test.c $(SRCDIR)/cd_handle.c
 	$(CC) $(CFLAGS) $(TESTDIR)/cd_handle_test.c $(SRCDIR)/cd_handle.c -o cd_handle_test
