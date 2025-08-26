@@ -141,10 +141,31 @@ int main() {
         // commnad chain
         int cmd_start = 0;
         int fd, saved_out, file_no, redir = 0; // variables for redirection
+        int pipefd[2], saved_stdout, saved_stdin, used_pipe = 0;
         for (int j = 0; j <= i; j++) {
-            // if j equals i (end of the command(s)) or the index of an operator like '&&' or '||'
+            // if j equals i (end of the command(s)) or the index of an operator like '&&', '||' or '|' (pipe)
             if (j == i ||
-               (args[j] != NULL && (strcmp(args[j], "&&") == 0 || strcmp(args[j], "||") == 0))) {
+                (args[j] != NULL &&
+                (strcmp(args[j], "&&") == 0 || strcmp(args[j], "||") == 0 || strcmp(args[j], "|") == 0))) {
+
+                if (used_pipe == 1) {
+                    dup2(saved_stdout, STDOUT_FILENO);
+                    close(saved_stdout);
+
+                    saved_stdin = dup(STDIN_FILENO);
+                    dup2(pipefd[0], STDIN_FILENO);
+                    close(pipefd[0]);
+                    used_pipe = -1;
+                }
+
+                if (args[j] != NULL && strcmp(args[j], "|") == 0) {
+                    pipe(pipefd);
+                    saved_stdout = dup(STDOUT_FILENO);
+                    dup2(pipefd[1], STDOUT_FILENO);
+                    close(pipefd[1]);
+                    used_pipe = 1;
+                }
+
                 if (cmd_start < j) {
                     char* current_args[MAX_ARGS];
                     int k;
@@ -221,6 +242,13 @@ int main() {
                             fprintf(stderr, "Fork failed.\n");
                             exit_code = 1;
                         }
+                    }
+
+
+                    if (used_pipe == -1) {
+                        dup2(saved_stdin, STDIN_FILENO);
+                        close(saved_stdin);
+                        used_pipe = 0;
                     }
 
                     // if redirection is used
