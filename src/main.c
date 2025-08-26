@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <glob.h>
+#include <signal.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <sys/wait.h>
@@ -29,6 +30,7 @@ void clean_exit( void ) {
 
 int main() {
     atexit(clean_exit);
+    signal(SIGINT, SIG_IGN);
     int exit_code = 0;
     char cwd[PATH_MAX];
     char last_dir[PATH_MAX];
@@ -246,6 +248,7 @@ int main() {
                                 exit_code = WEXITSTATUS(status);
                         }
                         else if (pid == 0) {
+                            signal(SIGINT, SIG_DFL);
                             execvp(current_args[0], current_args);
 
                             perror(current_args[0]);
