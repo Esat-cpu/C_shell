@@ -17,6 +17,9 @@
 
 #define MAX_ARGS 64
 
+// History file, set to NULL if saving history file is not required.
+const char* HIS_FILE = ".shell_history";
+
 #ifndef PATH_MAX
 #define PATH_MAX 4096
 #endif
@@ -26,6 +29,14 @@ char* command = NULL;
 
 void clean_exit( void ) {
     if (command) free(command);
+    if (isatty(STDIN_FILENO)) {
+        char history_file[PATH_MAX];
+        char* home = getenv("HOME");
+        if (home && HIS_FILE) {
+            snprintf(history_file, sizeof(history_file), "%s/%s", home, HIS_FILE);
+            write_history(history_file);
+        }
+    }
 }
 
 int main() {
@@ -56,6 +67,12 @@ int main() {
     char* home = getenv("HOME");
     char* user = getenv("USER");
     if (user == NULL) user = "shell";
+    
+    if (home && HIS_FILE) {
+        char history_file[PATH_MAX];
+        snprintf(history_file, sizeof(history_file), "%s/%s", home, HIS_FILE);
+        read_history(history_file);
+    }
 
     while (1) {
         if (isatty(STDIN_FILENO)) {
