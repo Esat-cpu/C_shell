@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <limits.h>
 #include <string.h>
+#include <fcntl.h>
 #include "cd_handle.h"
 
 #ifndef PATH_MAX
@@ -60,19 +61,37 @@ static void run_cd_handle_test( void ) {
 
     size_t total = sizeof(cases) / sizeof(cases[0]);
 
-    for (unsigned i = 0; i < total; i++) {
+    int saved_out = dup(STDOUT_FILENO);
+    int saved_err = dup(STDERR_FILENO);
+    int nul = open("/dev/null", O_WRONLY);
+    dup2(nul, STDOUT_FILENO);
+    dup2(nul, STDERR_FILENO);
+    close(nul);
+
+    int er = 0;
+    unsigned i;
+    for (i = 0; i < total; i++) {
         int status = cd_handle(cases[i].input, cwd, last_dir);
+        fflush(stdout);
+        fflush(stderr);
 
         if (
             strcmp(cwd, cases[i].expected_cwd) != 0 ||
             strcmp(last_dir, cases[i].expected_last_dir) != 0 ||
             status != cases[i].expected_code
         ) {
-            printf("[!] cd failed with %s.\n", cases[i].desc);
-            return;
+            er = 1;
+            break;
         }
     }
-    printf("\n[OK] cd test successful.\n");
+
+    dup2(saved_out, STDOUT_FILENO);
+    dup2(saved_err, STDERR_FILENO);
+    close(saved_out);
+    close(saved_err);
+
+    if (er) fprintf(stderr, "[!] cd failed with %s.\n", cases[i].desc);
+    else printf("[OK] cd test successful.\n");
 }
 
 
