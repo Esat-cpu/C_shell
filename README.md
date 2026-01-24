@@ -34,7 +34,7 @@ make
 
 Execute:
 ```bash
-./shell
+./build/release/shell
 ```
 
 ---
