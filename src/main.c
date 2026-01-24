@@ -14,15 +14,12 @@
 
 #include "trim.h"
 #include "cd_handle.h"
+#include "tokenize.h"
 
 #define MAX_ARGS 64
 
 // History file, set to NULL if saving history file is not required.
 const char* HIS_FILE = ".shell_history";
-
-#ifndef PATH_MAX
-#define PATH_MAX 4096
-#endif
 
 
 char* command = NULL;
@@ -67,10 +64,10 @@ int main() {
     char* home = getenv("HOME");
     char* user = getenv("USER");
     if (user == NULL) user = "shell";
-    
+
     if (home && HIS_FILE) {
         char history_file[PATH_MAX];
-        snprintf(history_file, sizeof(history_file), "%s/%s", home, HIS_FILE);
+        snprintf(history_file, sizeof history_file, "%s/%s", home, HIS_FILE);
         read_history(history_file);
     }
 
@@ -112,37 +109,8 @@ int main() {
 
         // tokenize
         char* args[MAX_ARGS];
-        int index_of_dup[MAX_ARGS];
-        int dup_count = 0;
-        int i = 0;
-        char* token = strtok(command, " ");
-        glob_t result;
+        size_t last_index = tokenize(command, args, MAX_ARGS);
 
-        while (token != NULL && i < MAX_ARGS - 1) {
-            if (token[0] == '$') {
-                token = getenv(token + 1);
-                if (token == NULL) token = "";
-            }
-            // if there are glob characters
-            if (strchr(token, '*') || strchr(token, '?') || strchr(token, '[')) {
-                if (glob(token, 0, NULL, &result) == 0) {
-                    for (size_t ind = 0; ind < result.gl_pathc; ind++) {
-                        if (i < MAX_ARGS - 1) {
-                            index_of_dup[dup_count++] = i;
-                            args[i++] = strdup(result.gl_pathv[ind]);
-                        }
-                        else break;
-                    }
-                    globfree(&result);
-                } else { // Glob failed, use original token
-                    args[i++] = token;
-                }
-            } else {
-                args[i++] = token;
-            }
-            token = strtok(NULL, " ");
-        }
-        args[i] = NULL; // i is now end of the command(s)
 
 
         // exit command
@@ -169,14 +137,14 @@ int main() {
             exit(exit_code);
         }
 
-    
+
         // commnad chain
-        int cmd_start = 0;
+        size_t cmd_start = 0;
         int fd, saved_out, file_no, redir = 0; // variables for redirection
         int pipefd[2], saved_stdout, saved_stdin, used_pipe = 0;
-        for (int j = 0; j <= i; j++) {
-            // if j equals i (end of the command(s)) or the index of an operator like '&&', '||' or '|' (pipe)
-            if (j == i ||
+        for (size_t j = 0; j <= last_index; j++) {
+            // if j equals last_index or the index of an operator like '&&', '||' or '|' (pipe)
+            if (j == last_index ||
                 (args[j] != NULL &&
                 (strcmp(args[j], "&&") == 0 || strcmp(args[j], "||") == 0 || strcmp(args[j], "|") == 0))) {
 
@@ -201,7 +169,7 @@ int main() {
                 if (cmd_start < j) {
                     char* current_args[MAX_ARGS];
                     int k;
-                    for (k = 0; k < (j - cmd_start); k++) {
+                    for (k = 0; (size_t) k < (j - cmd_start); k++) {
                         int index = cmd_start + k;
                         // if >, >>, 2> or 2>> is used
                         if (strcmp(args[index], ">") == 0 ||
@@ -239,7 +207,7 @@ int main() {
 
                             dup2(fd, file_no);
                             close(fd);
-                            break; // things after that isn't command
+                            break; // things after that aren't command
                         }
                         current_args[k] = args[index];
                     }
@@ -298,7 +266,7 @@ int main() {
                     break;
                 }
 
-                if (j < i && args[j] != NULL) {
+                if (j < last_index && args[j] != NULL) {
                     if (strcmp(args[j], "&&") == 0 && exit_code != 0) {
                         break;
                     } else if (strcmp(args[j], "||") == 0 && exit_code == 0) {
@@ -310,9 +278,8 @@ int main() {
             }
         } // end of command chain
 
-        for (int f = 0; f < dup_count; f++) {
-            free(args[index_of_dup[f]]);
-        }
+        for (size_t i = 0; args[i]; i++)
+            free(args[i]);
     }
 
     return 0;

@@ -1,6 +1,5 @@
 #include <string.h>
 #include <ctype.h>
-#include "trim.h"
 
 void trim(char *str) {
     char *start = str;
