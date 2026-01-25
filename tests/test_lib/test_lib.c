@@ -15,6 +15,11 @@ size_t test_fail = 0;
 
 // print the values of a string array to out
 static void sprint_arr(char** args, char* out) {
+    if (args == NULL) {
+        snprintf(out, ARR_STR_BUFF_SIZE, "NULL");
+        return;
+    }
+
     strcpy(out, "{");
     for (int i = 0; args[i]; ++i) {
         strcat(out, "\"");
@@ -75,6 +80,20 @@ assert_eq_str_arr (char** arr1, char** arr2, const char* desc,
     char arr2_str[ARR_STR_BUFF_SIZE];
     sprint_arr(arr1, arr1_str);
     sprint_arr(arr2, arr2_str);
+
+
+    if (arr1 == NULL && arr2 == NULL) {
+        test_success++;
+        return;
+    }
+
+    if (arr1 == NULL || arr2 == NULL) {
+        test_fail++;
+
+        fprintf(stderr, fail_message, file, line, desc, arr1_str, arr2_str);
+        return;
+    }
+
 
     size_t i;
     for (i = 0; arr1[i] && arr2[i]; i++) {
