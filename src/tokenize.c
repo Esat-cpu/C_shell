@@ -41,8 +41,10 @@ size_t tokenize(const char* command, char** args, size_t max_args) {
             continue;
         }
 
-        // Check if character is '\', escape status is 0 and
-        // it isn't enclosed in single quotes
+        //  Check if character is '\', escape status is 0 and
+        //+ it isn't enclosed in single quotes
+        //  if so, do not take the '\' character and set
+        //+ escape status to 1
         if (*ch == '\\' && !escape && status != SINGLE_Q) {
             escape = 1;
             continue;
@@ -63,6 +65,7 @@ size_t tokenize(const char* command, char** args, size_t max_args) {
 
             if (status == DOUBLE_Q) {
                 flush_token(buf, &len, args, &iter);
+                status = NORMAL;
                 continue;
             }
         }
@@ -76,6 +79,7 @@ size_t tokenize(const char* command, char** args, size_t max_args) {
 
             if (status == SINGLE_Q) {
                 flush_token(buf, &len, args, &iter);
+                status = NORMAL;
                 continue;
             }
         }

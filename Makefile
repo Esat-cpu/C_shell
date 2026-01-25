@@ -3,6 +3,7 @@ CFLAGS  = -Wall -Wextra -I$(INCDIR)
 TARGET  := shell
 SRCDIR  := src
 TESTDIR := tests
+TESTLIB := tests/test_lib
 INCDIR  := include
 
 all: $(TARGET)
@@ -10,15 +11,24 @@ all: $(TARGET)
 $(TARGET): release_dir $(wildcard $(SRCDIR)/*.c $(INCDIR)/*.h)
 	$(CC) $(CFLAGS) -O2 $(wildcard $(SRCDIR)/*.c) -lreadline -o build/release/$(TARGET)
 
+
 test_cd_handle: test_dir $(TESTDIR)/cd_handle_test.c $(SRCDIR)/cd_handle.c
 	@$(CC) $(CFLAGS) $(TESTDIR)/cd_handle_test.c $(SRCDIR)/cd_handle.c -o build/test/cd_handle_test
 	@build/test/cd_handle_test
+
 
 test_trim: test_dir $(TESTDIR)/trim_test.c $(SRCDIR)/trim.c
 	@$(CC) $(CFLAGS) $(TESTDIR)/trim_test.c $(SRCDIR)/trim.c -o build/test/trim_test
 	@build/test/trim_test
 
-test: test_cd_handle test_trim
+
+test_tokenize: test_dir $(TESTDIR)/tokenize_test.c $(SRCDIR)/tokenize.c
+	@$(CC) $(CFLAGS) -I$(TESTLIB) -o build/test/tokenize_test \
+		$(TESTLIB)/test_lib.c $(TESTDIR)/tokenize_test.c $(SRCDIR)/tokenize.c
+	@build/test/tokenize_test
+
+
+test: test_cd_handle test_trim test_tokenize
 
 
 release_dir:
@@ -34,5 +44,8 @@ distclean:
 	rm -fr build
 
 
-.PHONY: all test clean distclean test_cd_handle test_trim release_dir test_dir
+.PHONY: all \
+	 clean distclean \
+	 test test_cd_handle test_trim test_tokenize \
+	 release_dir test_dir \
 
