@@ -15,7 +15,8 @@ void end(const char*);
         const char*: assert_eq_str, \
         long: assert_eq_long, \
         int: assert_eq_long, \
-        char**: assert_eq_str_arr \
+        char**: assert_eq_str_arr, \
+        default: assert_eq_long \
 )(X, Y, desc, __FILE__, __LINE__)
 
 #define END(name) end(name)

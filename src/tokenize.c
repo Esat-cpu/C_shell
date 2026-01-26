@@ -12,21 +12,39 @@ typedef enum {
 
 
 
-void free_args(char** args) {
-    for (int i = 0; args[i]; ++i)
-        free(args[i]);
+typedef struct {
+    char* value;
+    Status status;
+} Token;
+
+
+
+void free_tokens(Token* args) {
+    for (int i = 0; args[i].value; ++i)
+        free(args[i].value);
 }
 
 
-static void flush_token(char* buf, size_t* len, char** args, size_t* iter) {
+void tokens_to_str_arr (Token* args, char** arr) {
+    int i;
+    for (i = 0; args[i].value; ++i)
+        arr[i] = args[i].value;
+    arr[i] = NULL;
+}
+
+
+static void
+flush_token (char* buf, size_t* len, Status status, Token* args, size_t* iter) {
     if (*len == 0) return;
     buf[*len] = '\0';
-    args[(*iter)++] = strdup(buf);
+    args[*iter].value = strdup(buf);
+    args[*iter].status = status;
+    (*iter)++;
     *len = 0;
 }
 
 
-size_t tokenize(const char* command, char** args, size_t max_args) {
+size_t tokenize(const char* command, Token* args, size_t max_args) {
     Status status = NORMAL;
     int escape = 0;
 
@@ -38,7 +56,7 @@ size_t tokenize(const char* command, char** args, size_t max_args) {
 
     for (const char* ch = command; *ch; ch++) {
         if (len >= MAX_BUF - 1)
-            flush_token(buf, &len, args, &iter);
+            flush_token(buf, &len, status, args, &iter);
 
         if (iter >= max_args - 1) break;
 
@@ -58,7 +76,7 @@ size_t tokenize(const char* command, char** args, size_t max_args) {
         }
 
         if (*ch == ' ' && status == NORMAL) {
-            flush_token(buf, &len, args, &iter);
+            flush_token(buf, &len, NORMAL, args, &iter);
             continue;
         }
 
@@ -71,7 +89,7 @@ size_t tokenize(const char* command, char** args, size_t max_args) {
             }
 
             if (status == DOUBLE_Q) {
-                flush_token(buf, &len, args, &iter);
+                flush_token(buf, &len, DOUBLE_Q, args, &iter);
                 status = NORMAL;
                 continue;
             }
@@ -85,7 +103,7 @@ size_t tokenize(const char* command, char** args, size_t max_args) {
             }
 
             if (status == SINGLE_Q) {
-                flush_token(buf, &len, args, &iter);
+                flush_token(buf, &len, SINGLE_Q, args, &iter);
                 status = NORMAL;
                 continue;
             }
@@ -94,8 +112,8 @@ size_t tokenize(const char* command, char** args, size_t max_args) {
         buf[len++] = *ch;
     }
 
-    flush_token(buf, &len, args, &iter);
-    args[iter] = NULL;
+    flush_token(buf, &len, NORMAL, args, &iter);
+    args[iter].value = NULL;
     return iter; // the index of NULL
 }
 

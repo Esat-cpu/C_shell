@@ -1,9 +1,24 @@
 #ifndef TOKENIZE_H
 #define TOKENIZE_H
 
-void free_args(char**);
+typedef enum {
+    NORMAL=1,
+    SINGLE_Q,
+    DOUBLE_Q
+} Status;
 
-size_t tokenize(const char* command, char** args, size_t max_args);
+
+typedef struct {
+    char* value;
+    Status status;
+} Token;
+
+
+void tokens_to_str_arr(Token*, char**);
+
+void free_tokens(Token*);
+
+size_t tokenize(const char* command, Token* args, size_t max_args);
 
 #endif
 

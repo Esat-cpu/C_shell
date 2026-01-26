@@ -36,6 +36,7 @@ void clean_exit( void ) {
     }
 }
 
+
 int main() {
     atexit(clean_exit);
     signal(SIGINT, SIG_IGN);
@@ -108,8 +109,11 @@ int main() {
 
 
         // tokenize
+        Token argv[MAX_ARGS];
+        size_t last_index = tokenize(command, argv, MAX_ARGS);
+
         char* args[MAX_ARGS];
-        size_t last_index = tokenize(command, args, MAX_ARGS);
+        tokens_to_str_arr(argv, args);
 
 
 
@@ -278,8 +282,8 @@ int main() {
             }
         } // end of command chain
 
-        for (size_t i = 0; args[i]; i++)
-            free(args[i]);
+        free_tokens(argv);
+        memset(args, 0, sizeof args);
     }
 
     return 0;
