@@ -19,6 +19,8 @@ test_one_word () {
 
     tokenize(c.command, args, MAX_ARGS);
     ASSERT_EQ (args, c.expected_args, c.desc);
+
+    free_args(args);
 }
 
 
@@ -29,6 +31,8 @@ test_words_with_space () {
 
     tokenize(c.command, args, MAX_ARGS);
     ASSERT_EQ (args, c.expected_args, c.desc);
+
+    free_args(args);
 }
 
 
@@ -39,6 +43,8 @@ test_words_with_escape_and_space () {
 
     tokenize(c.command, args, MAX_ARGS);
     ASSERT_EQ (args, c.expected_args, c.desc);
+
+    free_args(args);
 }
 
 
@@ -53,6 +59,8 @@ test_double_quotes () {
 
     tokenize(c.command, args, MAX_ARGS);
     ASSERT_EQ (args, c.expected_args, c.desc);
+
+    free_args(args);
 }
 
 
@@ -67,6 +75,8 @@ test_double_quotes_with_escape () {
 
     tokenize(c.command, args, MAX_ARGS);
     ASSERT_EQ (args, c.expected_args, c.desc);
+
+    free_args(args);
 }
 
 
@@ -81,6 +91,8 @@ test_single_quotes_with_double_quotes_and_escape () {
 
     tokenize(c.command, args, MAX_ARGS);
     ASSERT_EQ (args, c.expected_args, c.desc);
+
+    free_args(args);
 }
 
 
@@ -95,6 +107,8 @@ test_words_with_many_spaces () {
 
     tokenize(c.command, args, MAX_ARGS);
     ASSERT_EQ (args, c.expected_args, c.desc);
+
+    free_args(args);
 }
 
 

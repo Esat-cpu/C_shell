@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <string.h>
+#include <stdlib.h>
 
 #define MAX_BUF 4096
 
@@ -9,6 +10,12 @@ typedef enum {
     DOUBLE_Q
 } Status;
 
+
+
+void free_args(char** args) {
+    for (int i = 0; args[i]; ++i)
+        free(args[i]);
+}
 
 
 static void flush_token(char* buf, size_t* len, char** args, size_t* iter) {
