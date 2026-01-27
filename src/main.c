@@ -75,29 +75,39 @@ int main() {
     while (1) {
         if (isatty(STDIN_FILENO)) {
             int prmpt_size = PATH_MAX + strlen(user) + 10;
-            char* prompt = malloc(prmpt_size);
+            char prompt[prmpt_size];
+
+            // The path that will appear in the prompt
             char prmpt_cwd[PATH_MAX];
+
+            // '~' contraction for prompt
             if (strncmp(cwd, home, strlen(home)) == 0)
                 snprintf(prmpt_cwd, PATH_MAX, "~%s", cwd + strlen(home));
             else
                 strcpy(prmpt_cwd, cwd);
+
+            // Showing the error code in the prompt
             if (exit_code == 0)
                 snprintf(prompt, prmpt_size, "\033[1;32m%s \033[1;34m%s\033[0m> ", user, prmpt_cwd);
             else
                 snprintf(prompt, prmpt_size, "\033[1;32m%s \033[1;34m%s \033[1;31m[%d]\033[0m> ", user, prmpt_cwd, exit_code);
 
+
             if (command) free(command);
             command = readline(prompt);
-            free(prompt);
+
             if (!command) {
-                perror("readline"); exit(errno);
+                exit(exit_code);
             }
-        } else {
+        }
+        else {
             size_t size = 0;
             ssize_t len = getline(&command, &size, stdin);
+
             if (len == -1) {
                 if (errno == ENOTTY) break;
-                perror("getline"); exit(errno);
+                perror("getline");
+                exit(EXIT_FAILURE);
             }
         }
 
