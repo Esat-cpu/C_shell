@@ -28,7 +28,17 @@ test_tokenize: test_dir $(TESTDIR)/tokenize_test.c $(SRCDIR)/tokenize.c
 	@build/test/tokenize_test
 
 
-test: test_cd_handle test_trim test_tokenize
+
+test_expansion: test_dir $(TESTDIR)/expansion_test.c $(SRCDIR)/expansion.c
+	@$(CC) $(CFLAGS) -I$(TESTLIB) -o build/test/expansion_test \
+		$(TESTLIB)/test_lib.c \
+		$(TESTDIR)/expansion_test.c \
+		$(SRCDIR)/expansion.c $(SRCDIR)/tokenize.c
+	@build/test/expansion_test
+
+
+
+test: test_cd_handle test_trim test_tokenize test_expansion
 
 
 release_dir:
@@ -46,6 +56,6 @@ distclean:
 
 .PHONY: all \
 	 clean distclean \
-	 test test_cd_handle test_trim test_tokenize \
+	 test test_cd_handle test_trim test_tokenize test_expansion \
 	 release_dir test_dir \
 
