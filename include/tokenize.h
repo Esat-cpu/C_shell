@@ -1,6 +1,11 @@
 #ifndef TOKENIZE_H
 #define TOKENIZE_H
 
+
+#define for_each_token(token, args) \
+    for (Token* (token) = (args); (token)->value; ++(token))
+
+
 typedef enum {
     NORMAL=1,
     SINGLE_Q,

@@ -6,7 +6,6 @@
 #include <limits.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <glob.h>
 #include <signal.h>
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -15,6 +14,7 @@
 #include "trim.h"
 #include "cd_handle.h"
 #include "tokenize.h"
+#include "expansion.h"
 
 #define MAX_ARGS 64
 
@@ -111,6 +111,9 @@ int main() {
         // tokenize
         Token argv[MAX_ARGS];
         size_t last_index = tokenize(command, argv, MAX_ARGS);
+
+        // param expansion
+        expand_param(argv, exit_code);
 
         char* args[MAX_ARGS];
         tokens_to_str_arr(argv, args);
