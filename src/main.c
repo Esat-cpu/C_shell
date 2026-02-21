@@ -23,6 +23,9 @@ const char* HIS_FILE = ".shell_history";
 
 
 char* command = NULL;
+volatile sig_atomic_t exit_code = 0;
+
+
 
 void clean_exit( void ) {
     if (command) free(command);
@@ -37,10 +40,23 @@ void clean_exit( void ) {
 }
 
 
+
+// clear input and go to the next line
+static void sigint_handler (int sig) {
+    (void)sig;  // suppress unused warning
+    write(STDOUT_FILENO, "\n", 1);
+    rl_replace_line("", 0);
+    rl_on_new_line();
+    rl_redisplay();
+    exit_code = 130;
+}
+
+
+
+
 int main() {
     atexit(clean_exit);
-    signal(SIGINT, SIG_IGN);
-    int exit_code = 0;
+    signal(SIGINT, sigint_handler);
     char cwd[PATH_MAX];
     char last_dir[PATH_MAX];
 
