@@ -1,31 +1,19 @@
-#include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
+#include "tokenize.h"
 
 #define MAX_BUF 4096
 
-typedef enum {
-    NORMAL=1,
-    SINGLE_Q,
-    DOUBLE_Q
-} Status;
 
-
-
-typedef struct {
-    char* value;
-    Status status;
-} Token;
-
-
-
-void free_tokens(Token* args) {
+void
+free_tokens(Token* args) {
     for (int i = 0; args[i].value; ++i)
         free(args[i].value);
 }
 
 
-void tokens_to_str_arr (Token* args, char** arr) {
+void
+tokens_to_str_arr(Token* args, char** arr) {
     int i;
     for (i = 0; args[i].value; ++i)
         arr[i] = args[i].value;
@@ -34,7 +22,7 @@ void tokens_to_str_arr (Token* args, char** arr) {
 
 
 static void
-flush_token (char* buf, size_t* len, Status status, Token* args, size_t* iter) {
+flush_token(char* buf, size_t* len, Status status, Token* args, size_t* iter) {
     if (*len == 0) return;
     buf[*len] = '\0';
     args[*iter].value = strdup(buf);
@@ -44,15 +32,14 @@ flush_token (char* buf, size_t* len, Status status, Token* args, size_t* iter) {
 }
 
 
-size_t tokenize(const char* command, Token* args, size_t max_args) {
+size_t
+tokenize(const char* command, Token* args, size_t max_args) {
     Status status = NORMAL;
     int escape = 0;
 
-    size_t iter = 0; // for args
-
+    size_t iter = 0;
     char buf[MAX_BUF];
-    size_t len = 0; // for buf
-
+    size_t len = 0;
 
     for (const char* ch = command; *ch; ch++) {
         if (len >= MAX_BUF - 1)
@@ -66,11 +53,7 @@ size_t tokenize(const char* command, Token* args, size_t max_args) {
             continue;
         }
 
-        //  Check if character is '\', escape status is 0 and
-        //+ it isn't enclosed in single quotes
-        //  if so, do not take the '\' character and set
-        //+ escape status to 1
-        if (*ch == '\\' && !escape && status != SINGLE_Q) {
+        if (*ch == '\\' && status != SINGLE_Q) {
             escape = 1;
             continue;
         }
@@ -80,14 +63,11 @@ size_t tokenize(const char* command, Token* args, size_t max_args) {
             continue;
         }
 
-
-        // double quote case
         if (*ch == '"') {
             if (status == NORMAL) {
                 status = DOUBLE_Q;
                 continue;
             }
-
             if (status == DOUBLE_Q) {
                 flush_token(buf, &len, DOUBLE_Q, args, &iter);
                 status = NORMAL;
@@ -95,13 +75,11 @@ size_t tokenize(const char* command, Token* args, size_t max_args) {
             }
         }
 
-        // single quote case
         if (*ch == '\'') {
             if (status == NORMAL) {
                 status = SINGLE_Q;
                 continue;
             }
-
             if (status == SINGLE_Q) {
                 flush_token(buf, &len, SINGLE_Q, args, &iter);
                 status = NORMAL;
@@ -114,6 +92,5 @@ size_t tokenize(const char* command, Token* args, size_t max_args) {
 
     flush_token(buf, &len, NORMAL, args, &iter);
     args[iter].value = NULL;
-    return iter; // the index of NULL
+    return iter;
 }
-
