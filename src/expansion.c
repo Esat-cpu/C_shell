@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <unistd.h>
 #include "tokenize.h"
+#include "expansion.h"
 
 #define BUF_INIT 256
 

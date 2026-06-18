@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <limits.h>
+#include "cd_handle.h"
 
 
 int
