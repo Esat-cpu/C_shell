@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <unistd.h>
+#include <limits.h>
 #include "tokenize.h"
 
 #define BUF_SIZE 256
@@ -144,6 +146,29 @@ expand_param (Token* args, int exit_code) {
         if (strchr(token->value, '$') && token->status != SINGLE_Q) {
             expand_param_in_token (token, exit_code);
         }
+    }
+}
+
+
+void
+expand_tilde (Token* args) {
+    for_each_token (token, args) {
+        if (token->status != NORMAL) continue;
+        if (token->value[0] != '~') continue;
+
+        char* home = getenv("HOME");
+        if (!home) continue;
+
+        size_t home_len = strlen(home);
+        size_t rest_len = strlen(token->value + 1);
+        char* expanded = malloc(home_len + rest_len + 1);
+        if (!expanded) continue;
+
+        memcpy(expanded, home, home_len);
+        memcpy(expanded + home_len, token->value + 1, rest_len + 1);
+
+        free(token->value);
+        token->value = expanded;
     }
 }
 

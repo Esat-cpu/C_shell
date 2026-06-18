@@ -15,8 +15,8 @@
 #include "cd_handle.h"
 #include "tokenize.h"
 #include "expansion.h"
-
-#define MAX_ARGS 64
+#include "globals.h"
+#include "prompt.h"
 
 // History file, set to NULL if saving history file is not required.
 const char* HIS_FILE = ".shell_history";
@@ -93,21 +93,7 @@ int main() {
             int prmpt_size = PATH_MAX + strlen(user) + 10;
             char prompt[prmpt_size];
 
-            // The path that will appear in the prompt
-            char prmpt_cwd[PATH_MAX];
-
-            // '~' contraction for prompt
-            if (strncmp(cwd, home, strlen(home)) == 0)
-                snprintf(prmpt_cwd, PATH_MAX, "~%s", cwd + strlen(home));
-            else
-                strcpy(prmpt_cwd, cwd);
-
-            // Showing the error code in the prompt
-            if (exit_code == 0)
-                snprintf(prompt, prmpt_size, "\033[1;32m%s \033[1;34m%s\033[0m> ", user, prmpt_cwd);
-            else
-                snprintf(prompt, prmpt_size, "\033[1;32m%s \033[1;34m%s \033[1;31m[%d]\033[0m> ", user, prmpt_cwd, exit_code);
-
+            get_prompt(prompt, prmpt_size, user, cwd, home, exit_code);
 
             if (command) free(command);
             command = readline(prompt);
@@ -137,6 +123,9 @@ int main() {
         // tokenize
         Token argv[MAX_ARGS];
         size_t last_index = tokenize(command, argv, MAX_ARGS);
+
+        // tilde expansion
+        expand_tilde(argv);
 
         // param expansion
         expand_param(argv, exit_code);
@@ -171,12 +160,10 @@ int main() {
         }
 
 
-        // commnad chain
+        // command chain
         size_t cmd_start = 0;
-        int fd, saved_out, file_no, redir = 0; // variables for redirection
         int pipefd[2], saved_stdout, saved_stdin, used_pipe = 0;
         for (size_t j = 0; j <= last_index; j++) {
-            // if j equals last_index or the index of an operator like '&&', '||' or '|' (pipe)
             if (j == last_index ||
                 (args[j] != NULL &&
                 (strcmp(args[j], "&&") == 0 || strcmp(args[j], "||") == 0 || strcmp(args[j], "|") == 0))) {
@@ -201,83 +188,146 @@ int main() {
 
                 if (cmd_start < j) {
                     char* current_args[MAX_ARGS];
-                    int k;
-                    for (k = 0; (size_t) k < (j - cmd_start); k++) {
+                    int arg_count = 0;
+                    int saved_out = -1, saved_err = -1;
+                    int used_out = 0, used_err = 0;
+                    int redir_err = 0;
+
+                    int k = 0;
+                    while ((size_t)k < (j - cmd_start)) {
                         int index = cmd_start + k;
-                        // if >, >>, 2> or 2>> is used
-                        if (strcmp(args[index], ">") == 0 ||
-                            strcmp(args[index], ">>") == 0 ||
-                            strcmp(args[index], "2>") == 0 ||
-                            strcmp(args[index], "2>>") == 0) {
-                            if (args[index + 1] == NULL ||
-                                strcmp(args[index + 1], ">") == 0 ||
-                                strcmp(args[index + 1], ">>") == 0) {
+                        char* tok = args[index];
+                        int consumed = 0;
+
+                        // separate redirect operators (next token is filename)
+                        if (strcmp(tok, ">") == 0) {
+                            if (k + 1 >= (int)(j - cmd_start) || args[index + 1] == NULL) {
                                 fprintf(stderr, "Redirect error.\n");
-                                exit_code = 2;
-                                break;
+                                exit_code = 2; redir_err = 1; break;
                             }
-                            redir = 1;
-
-
-                            if (strcmp(args[index], ">") == 0 || strcmp(args[index], ">>") == 0) {
-                                file_no = STDOUT_FILENO;
-                            } else {
-                                file_no = STDERR_FILENO;
-                            }
-
-                            saved_out = dup(file_no);
-                            if (saved_out < 0) {
-                                perror("dup");
-                                exit_code = errno;
-                                break;
-                            }
-
-                            if (strcmp(args[index], ">") == 0 || strcmp(args[index], "2>") == 0) {
-                                fd = open(args[index + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-                            } else {
-                                fd = open(args[index + 1], O_WRONLY | O_CREAT | O_APPEND, 0644);
-                            }
-
-                            dup2(fd, file_no);
-                            close(fd);
-                            break; // things after that aren't command
+                            if (!used_out) { saved_out = dup(STDOUT_FILENO); used_out = 1; }
+                            int fd = open(args[index + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+                            dup2(fd, STDOUT_FILENO); close(fd);
+                            k += 2; consumed = 1;
                         }
-                        current_args[k] = args[index];
-                    }
-                    current_args[k] = NULL;
-
-                    // cd command
-                    if (strcmp(current_args[0], "cd") == 0) {
-                        exit_code = cd_handle(current_args, cwd, last_dir);
-                    }
-                    // pwd command
-                    else if (strcmp(current_args[0], "pwd") == 0) {
-                        printf("%s\n", cwd);
-                        exit_code = 0;
-                    }
-                    else {
-                        // execute command
-                        int status;
-                        pid_t pid = fork();
-
-                        if (pid > 0) {
-                            wait(&status);
-                            if (WIFEXITED(status))
-                                exit_code = WEXITSTATUS(status);
+                        else if (strcmp(tok, ">>") == 0) {
+                            if (k + 1 >= (int)(j - cmd_start) || args[index + 1] == NULL) {
+                                fprintf(stderr, "Redirect error.\n");
+                                exit_code = 2; redir_err = 1; break;
+                            }
+                            if (!used_out) { saved_out = dup(STDOUT_FILENO); used_out = 1; }
+                            int fd = open(args[index + 1], O_WRONLY | O_CREAT | O_APPEND, 0644);
+                            dup2(fd, STDOUT_FILENO); close(fd);
+                            k += 2; consumed = 1;
                         }
-                        else if (pid == 0) {
-                            signal(SIGINT, SIG_DFL);
-                            execvp(current_args[0], current_args);
+                        else if (strcmp(tok, "2>") == 0) {
+                            if (k + 1 >= (int)(j - cmd_start) || args[index + 1] == NULL) {
+                                fprintf(stderr, "Redirect error.\n");
+                                exit_code = 2; redir_err = 1; break;
+                            }
+                            if (!used_err) { saved_err = dup(STDERR_FILENO); used_err = 1; }
+                            int fd = open(args[index + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+                            dup2(fd, STDERR_FILENO); close(fd);
+                            k += 2; consumed = 1;
+                        }
+                        else if (strcmp(tok, "2>>") == 0) {
+                            if (k + 1 >= (int)(j - cmd_start) || args[index + 1] == NULL) {
+                                fprintf(stderr, "Redirect error.\n");
+                                exit_code = 2; redir_err = 1; break;
+                            }
+                            if (!used_err) { saved_err = dup(STDERR_FILENO); used_err = 1; }
+                            int fd = open(args[index + 1], O_WRONLY | O_CREAT | O_APPEND, 0644);
+                            dup2(fd, STDERR_FILENO); close(fd);
+                            k += 2; consumed = 1;
+                        }
 
-                            perror(current_args[0]);
-                            _exit(127);
+                        // combined tokens: >file, >>file, 2>file, 2>>file
+                        else if (tok[0] == '>' && tok[1] != '\0' && tok[1] != '>' && tok[1] != '&') {
+                            if (!used_out) { saved_out = dup(STDOUT_FILENO); used_out = 1; }
+                            int fd = open(tok + 1, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+                            dup2(fd, STDOUT_FILENO); close(fd);
+                            k++; consumed = 1;
+                        }
+                        else if (tok[0] == '>' && tok[1] == '>' && tok[2] != '\0') {
+                            if (!used_out) { saved_out = dup(STDOUT_FILENO); used_out = 1; }
+                            int fd = open(tok + 2, O_WRONLY | O_CREAT | O_APPEND, 0644);
+                            dup2(fd, STDOUT_FILENO); close(fd);
+                            k++; consumed = 1;
+                        }
+                        else if (tok[0] == '2' && tok[1] == '>' && tok[2] != '\0' && tok[2] != '>') {
+                            if (!used_err) { saved_err = dup(STDERR_FILENO); used_err = 1; }
+                            int fd = open(tok + 2, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+                            dup2(fd, STDERR_FILENO); close(fd);
+                            k++; consumed = 1;
+                        }
+                        else if (tok[0] == '2' && tok[1] == '>' && tok[2] == '>' && tok[3] != '\0') {
+                            if (!used_err) { saved_err = dup(STDERR_FILENO); used_err = 1; }
+                            int fd = open(tok + 3, O_WRONLY | O_CREAT | O_APPEND, 0644);
+                            dup2(fd, STDERR_FILENO); close(fd);
+                            k++; consumed = 1;
+                        }
+
+                        // dup redirects: >&m, 2>&m, 1>&m
+                        else if (tok[0] == '>' && tok[1] == '&' && tok[2] != '\0') {
+                            int target = tok[2] - '0';
+                            if (!used_out) { saved_out = dup(STDOUT_FILENO); used_out = 1; }
+                            dup2(target, STDOUT_FILENO);
+                            k++; consumed = 1;
+                        }
+                        else if (tok[0] == '2' && tok[1] == '>' && tok[2] == '&' && tok[3] != '\0') {
+                            int target = tok[3] - '0';
+                            if (!used_err) { saved_err = dup(STDERR_FILENO); used_err = 1; }
+                            dup2(target, STDERR_FILENO);
+                            k++; consumed = 1;
+                        }
+                        else if (tok[0] == '1' && tok[1] == '>' && tok[2] == '&' && tok[3] != '\0') {
+                            int target = tok[3] - '0';
+                            if (!used_out) { saved_out = dup(STDOUT_FILENO); used_out = 1; }
+                            dup2(target, STDOUT_FILENO);
+                            k++; consumed = 1;
+                        }
+
+                        if (consumed) continue;
+
+                        current_args[arg_count++] = tok;
+                        k++;
+                    }
+                    current_args[arg_count] = NULL;
+
+                    if (arg_count > 0 && !redir_err) {
+                        if (strcmp(current_args[0], "cd") == 0) {
+                            exit_code = cd_handle(current_args, cwd, last_dir);
+                        }
+                        else if (strcmp(current_args[0], "pwd") == 0) {
+                            printf("%s\n", cwd);
+                            exit_code = 0;
                         }
                         else {
-                            fprintf(stderr, "Fork failed.\n");
-                            exit_code = 1;
+                            int status;
+                            pid_t pid = fork();
+
+                            if (pid > 0) {
+                                wait(&status);
+                                if (WIFEXITED(status))
+                                    exit_code = WEXITSTATUS(status);
+                            }
+                            else if (pid == 0) {
+                                signal(SIGINT, SIG_DFL);
+                                execvp(current_args[0], current_args);
+
+                                perror(current_args[0]);
+                                _exit(127);
+                            }
+                            else {
+                                fprintf(stderr, "Fork failed.\n");
+                                exit_code = 1;
+                            }
                         }
                     }
-
+                    else if (!redir_err) {
+                        fprintf(stderr, "Unexpected operator.\n");
+                        exit_code = 1;
+                    }
 
                     if (used_pipe == -1) {
                         dup2(saved_stdin, STDIN_FILENO);
@@ -285,12 +335,8 @@ int main() {
                         used_pipe = 0;
                     }
 
-                    // if redirection is used
-                    if (redir) {
-                        dup2(saved_out, file_no);
-                        close(saved_out);
-                        redir = 0;
-                    }
+                    if (used_out) { dup2(saved_out, STDOUT_FILENO); close(saved_out); }
+                    if (used_err) { dup2(saved_err, STDERR_FILENO); close(saved_err); }
                 }
 
                 else {

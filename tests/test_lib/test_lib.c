@@ -20,6 +20,11 @@ static void sprint_arr(char** args, char* out) {
         return;
     }
 
+    if (args[0] == NULL) {
+        snprintf(out, ARR_STR_BUFF_SIZE, "{}");
+        return;
+    }
+
     strcpy(out, "{");
     for (int i = 0; args[i]; ++i) {
         strcat(out, "\"");

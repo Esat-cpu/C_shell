@@ -48,15 +48,6 @@ int cd_handle(char** args, char* cwd, char* last_dir) {
     if (*new_path == '\0')
         strcpy(new_path, args[1]);
 
-    if (new_path[0] == '~') {
-        if (home == NULL) {
-            fprintf(stderr, "cd: HOME not set\n");
-            free(new_path);
-            return 1;
-        }
-        snprintf(new_path, PATH_MAX, "%s%s", home, args[1] + 1);
-    }
-
 
     //change dir
     int ret = chdir(new_path);
@@ -73,6 +64,9 @@ int cd_handle(char** args, char* cwd, char* last_dir) {
             perror("cd");
             return 1;
         }
+
+        setenv("OLDPWD", last_dir, 1);
+        setenv("PWD", cwd, 1);
     }
 
     return 0;

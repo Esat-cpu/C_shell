@@ -45,7 +45,7 @@ static void run_cd_handle_test( void ) {
     char* cmd5[] = {"cd", "-", NULL};
     char* cmd6[] = {"cd", NULL};
     char* cmd7[] = {"cd", "../..", NULL};
-    char* cmd8[] = {"cd", "~", NULL};
+    char* cmd8[] = {"cd", home, NULL};
 
     //+ and here
     struct CdTestCase cases[] = { // command, expected cwd, last_dir, exit code
@@ -56,7 +56,7 @@ static void run_cd_handle_test( void ) {
         {cmd5, "/", "/home", 0,    "previous dir with arg -"},
         {cmd6, home, "/", 0,       "no args"},
         {cmd7, "/", home, 0,       "double dot for parent dir"},
-        {cmd8, home, "/", 0,       "tilde for home dir"}
+        {cmd8, home, "/", 0,       "absolute path to home"}
     };
 
     size_t total = sizeof(cases) / sizeof(cases[0]);
