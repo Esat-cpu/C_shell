@@ -124,6 +124,7 @@ expand_param_in_token(Token* token, int exit_code) {
 
 void
 expand_param(Token* args, int exit_code) {
+    /* Skip single-quoted tokens – expansion only in NORMAL/DOUBLE_Q. */
     for_each_token(tok, args) {
         if (strchr(tok->value, '$') && tok->status != SINGLE_Q)
             expand_param_in_token(tok, exit_code);
@@ -133,6 +134,7 @@ expand_param(Token* args, int exit_code) {
 
 void
 expand_tilde(Token* args) {
+    /* Only expand ~ at start of NORMAL tokens. */
     for_each_token(tok, args) {
         if (tok->status != NORMAL) continue;
         if (tok->value[0] != '~') continue;

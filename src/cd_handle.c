@@ -8,6 +8,7 @@
 
 int
 cd_handle(char** args, char* cwd, char* last_dir) {
+    /* args[0]="cd".  args[1] is the target (or NULL for $HOME). */
     char* home = getenv("HOME");
     char* path = NULL;
 

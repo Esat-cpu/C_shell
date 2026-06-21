@@ -41,6 +41,11 @@ test_expansion: test_dir $(TESTDIR)/expansion_test.c $(SRCDIR)/expansion.c
 test: test_cd_handle test_trim test_tokenize test_expansion
 
 
+docs:
+	@doxygen docs/Doxyfile
+	@echo "Documentation generated at docs/html/index.html"
+
+
 release_dir:
 	@mkdir -p build/release
 
