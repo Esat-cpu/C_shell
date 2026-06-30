@@ -1,11 +1,11 @@
-CC      := gcc
+CC      = gcc
 CFLAGS  = -Wall -Wextra -I$(INCDIR)
-TARGET  := shell
-SRCDIR  := src
+TARGET  = shell
+SRCDIR  = src
 SRCCMD  = $(SRCDIR)/commands
-TESTDIR := tests
-TESTLIB := tests/test_lib
-INCDIR  := include
+TESTDIR = tests
+TESTLIB = tests/test_lib
+INCDIR  = include
 INCCMD  = $(INCDIR)/commands
 
 all: $(TARGET)
