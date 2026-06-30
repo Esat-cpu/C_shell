@@ -13,6 +13,7 @@
 
 #include "commands/cd.h"
 #include "commands/exit_builtin.h"
+#include "prompt_build.h"
 #include "trim.h"
 #include "tokenize.h"
 #include "expansion.h"
@@ -54,9 +55,8 @@ static void sigint_handler(int sig) {
 int main() {
     atexit(clean_exit);
     signal(SIGINT, sigint_handler);
-    char cwd[PATH_MAX];
-    char last_dir[PATH_MAX];
 
+    // Assign the executable location to the SHELL environment variable
     char *shell_path = malloc(PATH_MAX);
     ssize_t leng;
     if (shell_path != NULL) {
@@ -68,13 +68,15 @@ int main() {
     }
     free(shell_path);
 
-    if (getcwd(cwd, sizeof(cwd)) == NULL) {
+    // Get the current directory
+    if (getcwd(shell.cwd, sizeof shell.cwd) == NULL) {
         perror("getcwd");
         exit(errno);
     }
-    strcpy(last_dir, cwd);
+    strcpy(shell.oldpwd, shell.cwd);
 
 
+    // Get the home directory and user name
     char* home = getenv("HOME");
     char* user = getenv("USER");
     if (user == NULL) user = "shell";
@@ -87,23 +89,8 @@ int main() {
 
     while (1) {
         if (isatty(STDIN_FILENO)) {
-            int prmpt_size = PATH_MAX + strlen(user) + 10;
-            char prompt[prmpt_size];
-
-            // The path that will appear in the prompt
-            char prmpt_cwd[PATH_MAX];
-
-            // '~' contraction for prompt
-            if (strncmp(cwd, home, strlen(home)) == 0)
-                snprintf(prmpt_cwd, PATH_MAX, "~%s", cwd + strlen(home));
-            else
-                strcpy(prmpt_cwd, cwd);
-
-            // Showing the error code in the prompt
-            if (shell.exit_code == 0)
-                snprintf(prompt, prmpt_size, "\033[1;32m%s \033[1;34m%s\033[0m> ", user, prmpt_cwd);
-            else
-                snprintf(prompt, prmpt_size, "\033[1;32m%s \033[1;34m%s \033[1;31m[%d]\033[0m> ", user, prmpt_cwd, shell.exit_code);
+            char prompt[PATH_MAX];
+            prompt_build(prompt, PATH_MAX, home, user);
 
 
             if (command) free(command);
@@ -228,11 +215,11 @@ int main() {
 
                     // cd command
                     if (strcmp(current_args[0], "cd") == 0) {
-                        shell.exit_code = cd(current_args, cwd, last_dir);
+                        shell.exit_code = cd(current_args, shell.cwd, shell.oldpwd);
                     }
                     // pwd command
                     else if (strcmp(current_args[0], "pwd") == 0) {
-                        printf("%s\n", cwd);
+                        printf("%s\n", shell.cwd);
                         shell.exit_code = 0;
                     }
                     else {
