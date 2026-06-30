@@ -2,22 +2,25 @@ CC      := gcc
 CFLAGS  = -Wall -Wextra -I$(INCDIR)
 TARGET  := shell
 SRCDIR  := src
+SRCCMD  = $(SRCDIR)/commands
 TESTDIR := tests
 TESTLIB := tests/test_lib
 INCDIR  := include
+INCCMD  = $(INCDIR)/commands
 
 all: $(TARGET)
 
-$(TARGET): release_dir $(wildcard $(SRCDIR)/*.c $(INCDIR)/*.h)
-	$(CC) $(CFLAGS) -O2 $(wildcard $(SRCDIR)/*.c) -lreadline -o build/release/$(TARGET)
+$(TARGET): release_dir $(wildcard $(SRCDIR)/*.c $(SRCCMD)/*.c $(INCDIR)/*.h $(INCCMD)/*.h)
+	$(CC) $(CFLAGS) -O2 $(wildcard $(SRCDIR)/*.c $(SRCCMD)/*.c) \
+		-lreadline -o build/release/$(TARGET)
 
 
-test_cd_handle: test_dir $(TESTDIR)/cd_handle_test.c $(SRCDIR)/cd_handle.c
-	@$(CC) $(CFLAGS) $(TESTDIR)/cd_handle_test.c $(SRCDIR)/cd_handle.c -o build/test/cd_handle_test
-	@build/test/cd_handle_test
+test_cd: test_dir $(TESTDIR)/cd_test.c $(SRCCMD)/cd.c $(INCCMD)/cd.h
+	@$(CC) $(CFLAGS) $(TESTDIR)/cd_test.c $(SRCCMD)/cd.c -o build/test/cd_test
+	@build/test/cd_test
 
 
-test_trim: test_dir $(TESTDIR)/trim_test.c $(SRCDIR)/trim.c
+test_trim: test_dir $(TESTDIR)/trim_test.c $(SRCDIR)/trim.c $(INCDIR)/trim.h
 	@$(CC) $(CFLAGS) $(TESTDIR)/trim_test.c $(SRCDIR)/trim.c -o build/test/trim_test
 	@build/test/trim_test
 
@@ -26,7 +29,6 @@ test_tokenize: test_dir $(TESTDIR)/tokenize_test.c $(SRCDIR)/tokenize.c
 	@$(CC) $(CFLAGS) -I$(TESTLIB) -o build/test/tokenize_test \
 		$(TESTLIB)/test_lib.c $(TESTDIR)/tokenize_test.c $(SRCDIR)/tokenize.c
 	@build/test/tokenize_test
-
 
 
 test_expansion: test_dir $(TESTDIR)/expansion_test.c $(SRCDIR)/expansion.c
@@ -40,7 +42,7 @@ test_expansion: test_dir $(TESTDIR)/expansion_test.c $(SRCDIR)/expansion.c
 
 
 
-test: test_cd_handle test_trim test_tokenize test_expansion
+test: test_cd test_trim test_tokenize test_expansion
 
 
 release_dir:
@@ -58,6 +60,6 @@ distclean:
 
 .PHONY: all \
 	 clean distclean \
-	 test test_cd_handle test_trim test_tokenize test_expansion \
+	 test test_cd test_trim test_tokenize test_expansion \
 	 release_dir test_dir \
 

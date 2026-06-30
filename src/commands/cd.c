@@ -4,11 +4,11 @@
 #include <string.h>
 #include <limits.h>
 
-#include "cd_handle.h"
+#include "commands/cd.h"
 
 
 // cd command
-int cd_handle(char** args, char* cwd, char* last_dir) {
+int cd(char** args, char* cwd, char* last_dir) {
     char* home = getenv("HOME");
     char *new_path = malloc(PATH_MAX);
 

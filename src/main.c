@@ -12,7 +12,7 @@
 #include <sys/wait.h>
 
 #include "trim.h"
-#include "cd_handle.h"
+#include "commands/cd.h"
 #include "tokenize.h"
 #include "expansion.h"
 #include "shell.h"
@@ -244,7 +244,7 @@ int main() {
 
                     // cd command
                     if (strcmp(current_args[0], "cd") == 0) {
-                        shell.exit_code = cd_handle(current_args, cwd, last_dir);
+                        shell.exit_code = cd(current_args, cwd, last_dir);
                     }
                     // pwd command
                     else if (strcmp(current_args[0], "pwd") == 0) {

@@ -8,7 +8,7 @@
 #include <string.h>
 #include <fcntl.h>
 
-#include "cd_handle.h"
+#include "commands/cd.h"
 
 #ifndef PATH_MAX
 #define PATH_MAX 4096
@@ -25,7 +25,7 @@ struct CdTestCase {
 
 
 static void
-run_cd_handle_test(void) {
+run_cd_test(void) {
     char cwd[PATH_MAX];
     char last_dir[PATH_MAX];
     char first_dir[PATH_MAX];
@@ -74,7 +74,7 @@ run_cd_handle_test(void) {
     int er = 0;
     unsigned i;
     for (i = 0; i < total; i++) {
-        int status = cd_handle(cases[i].input, cwd, last_dir);
+        int status = cd(cases[i].input, cwd, last_dir);
         fflush(stdout);
         fflush(stderr);
 
@@ -100,7 +100,7 @@ run_cd_handle_test(void) {
 
 int
 main() {
-    run_cd_handle_test();
+    run_cd_test();
     return 0;
 }
 
