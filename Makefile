@@ -33,7 +33,9 @@ test_expansion: test_dir $(TESTDIR)/expansion_test.c $(SRCDIR)/expansion.c
 	@$(CC) $(CFLAGS) -I$(TESTLIB) -o build/test/expansion_test \
 		$(TESTLIB)/test_lib.c \
 		$(TESTDIR)/expansion_test.c \
-		$(SRCDIR)/expansion.c $(SRCDIR)/tokenize.c
+		$(SRCDIR)/expansion.c \
+		$(SRCDIR)/tokenize.c \
+		$(SRCDIR)/shell.c
 	@build/test/expansion_test
 
 

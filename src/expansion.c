@@ -2,14 +2,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+
+#include "expansion.h"
 #include "tokenize.h"
+#include "shell.h"
 
 #define BUF_SIZE 256
 
 
-
-static int
-ensure_capacity (char** buffer, size_t* cap, size_t len, size_t n) {
+static int ensure_capacity(char** buffer, size_t* cap, size_t len, size_t n) {
     if (*cap == 0) *cap = 16;
 
     while (len + n >= *cap) {
@@ -27,10 +28,7 @@ ensure_capacity (char** buffer, size_t* cap, size_t len, size_t n) {
 }
 
 
-
-
-static void
-expand_param_in_token (Token* token, int exit_code) {
+static void expand_param_in_token(Token* token) {
     // New buffer for expanded token value
     size_t str_size = BUF_SIZE;
     char* str = malloc(str_size);
@@ -51,7 +49,7 @@ expand_param_in_token (Token* token, int exit_code) {
                 char code[16];
 
                 // convert exit code to string
-                snprintf(code, 16, "%d", exit_code);
+                snprintf(code, 16, "%d", shell.exit_code);
 
                 if (ensure_capacity(&str, &str_size, len, strlen(code)) < 0) {
                     free(str);
@@ -134,15 +132,10 @@ expand_param_in_token (Token* token, int exit_code) {
 }
 
 
-
-
-
-
-void
-expand_param (Token* args, int exit_code) {
+void expand_param(Token* args) {
     for_each_token (token, args) {
         if (strchr(token->value, '$') && token->status != SINGLE_Q) {
-            expand_param_in_token (token, exit_code);
+            expand_param_in_token(token);
         }
     }
 }

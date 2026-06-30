@@ -7,14 +7,15 @@
 
 #define ARR_STR_BUFF_SIZE 4096
 
-size_t tests = 0;
-size_t test_success = 0;
-size_t test_fail = 0;
+
+static size_t tests = 0;
+static size_t test_success = 0;
+static size_t test_fail = 0;
 
 
-
-// print the values of a string array to out
-static void sprint_arr(char** args, char* out) {
+// Print the values of a string array to out
+static void
+sprint_arr(char** args, char* out) {
     if (args == NULL) {
         snprintf(out, ARR_STR_BUFF_SIZE, "NULL");
         return;
@@ -30,11 +31,8 @@ static void sprint_arr(char** args, char* out) {
 }
 
 
-
 void
-assert_eq_str (const char* str1, const char* str2, const char* desc,
-                const char* file, int line)
-{
+assert_eq_str(const char* str1, const char* str2, const char* desc, const char* file, int line) {
     tests++;
 
     if (strcmp(str1, str2) == 0) {
@@ -50,9 +48,7 @@ assert_eq_str (const char* str1, const char* str2, const char* desc,
 
 
 void
-assert_eq_long (long num1, long num2, const char* desc,
-                const char* file, int line)
-{
+assert_eq_long(long num1, long num2, const char* desc, const char* file, int line) {
     tests++;
 
     if (num1 == num2) {
@@ -67,12 +63,8 @@ assert_eq_long (long num1, long num2, const char* desc,
 }
 
 
-
-
 void
-assert_eq_str_arr (char** arr1, char** arr2, const char* desc,
-                const char* file, int line)
-{
+assert_eq_str_arr(char** arr1, char** arr2, const char* desc, const char* file, int line) {
     tests++;
     const char* fail_message = RED "[!] FAIL at %s:%d: %s\n%s is not %s!\n" RESET;
 
@@ -116,9 +108,8 @@ assert_eq_str_arr (char** arr1, char** arr2, const char* desc,
 }
 
 
-
-
-void end(const char* name) {
+void
+end(const char* name) {
     printf("Ran %zu %s test(s).\n", tests, name);
     printf("Success: %zu  |  Fail: %zu\n", test_success, test_fail);
     if (test_fail == 0)

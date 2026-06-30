@@ -1,9 +1,10 @@
 #include <string.h>
+
 #include "test_lib.h"
 #include "tokenize.h"
 
-
 #define MAX_ARGS 64
+
 
 typedef struct {
     char* command;
@@ -17,7 +18,7 @@ char* arr[MAX_ARGS];
 
 
 static void
-test_one_word () {
+test_one_word() {
     TestCase c = {"helo", {"helo", NULL}, __func__};
 
     tokenize(c.command, args, MAX_ARGS);
@@ -30,7 +31,7 @@ test_one_word () {
 
 
 static void
-test_words_with_space () {
+test_words_with_space() {
     TestCase c = {"hello world test", {"hello", "world", "test", NULL}, __func__};
 
     tokenize(c.command, args, MAX_ARGS);
@@ -43,7 +44,7 @@ test_words_with_space () {
 
 
 static void
-test_words_with_escape_and_space () {
+test_words_with_escape_and_space() {
     TestCase c = {"hello\\ world test", {"hello world", "test", NULL}, __func__};
 
     tokenize(c.command, args, MAX_ARGS);
@@ -56,7 +57,7 @@ test_words_with_escape_and_space () {
 
 
 static void
-test_double_quotes () {
+test_double_quotes() {
     TestCase c = {
         "echo \"hello 'world'\" test",
         {"echo", "hello 'world'", "test", NULL},
@@ -73,7 +74,7 @@ test_double_quotes () {
 
 
 static void
-test_double_quotes_with_escape () {
+test_double_quotes_with_escape() {
     TestCase c = {
         "echo \"hello \\\" world\" test",
         {"echo", "hello \" world", "test", NULL},
@@ -90,7 +91,7 @@ test_double_quotes_with_escape () {
 
 
 static void
-test_single_quotes_with_double_quotes_and_escape () {
+test_single_quotes_with_double_quotes_and_escape() {
     TestCase c = {
         "echo '\"hello\" \\' world test",
         {"echo", "\"hello\" \\", "world", "test", NULL},
@@ -107,7 +108,7 @@ test_single_quotes_with_double_quotes_and_escape () {
 
 
 static void
-test_words_with_many_spaces () {
+test_words_with_many_spaces() {
     TestCase c = {
         "   echo     hello      world   ",
         {"echo", "hello", "world", NULL},
@@ -123,9 +124,8 @@ test_words_with_many_spaces () {
 }
 
 
-
 static void
-test_status_of_normal_tokens () {
+test_status_of_normal_tokens() {
     TestCase c = {
         "echo hello",
         {0},
@@ -141,7 +141,7 @@ test_status_of_normal_tokens () {
 
 
 static void
-test_status_of_double_quoted_tokens () {
+test_status_of_double_quoted_tokens() {
     TestCase c = {
         "echo \"hello world\"",
         {0},
@@ -158,7 +158,7 @@ test_status_of_double_quoted_tokens () {
 
 
 static void
-test_status_of_single_quoted_tokens () {
+test_status_of_single_quoted_tokens() {
     TestCase c = {
         "'echo hello' world",
         {0},
@@ -174,8 +174,8 @@ test_status_of_single_quoted_tokens () {
 }
 
 
-
-void run_tests ( void ) {
+void
+run_tests(void) {
     test_one_word();
     test_words_with_space();
     test_words_with_escape_and_space();
@@ -191,7 +191,8 @@ void run_tests ( void ) {
 }
 
 
-int main() {
+int
+main() {
     run_tests();
     return 0;
 }

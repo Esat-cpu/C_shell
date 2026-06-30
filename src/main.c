@@ -15,19 +15,18 @@
 #include "cd_handle.h"
 #include "tokenize.h"
 #include "expansion.h"
+#include "shell.h"
 
 #define MAX_ARGS 64
 
+
 // History file, set to NULL if saving history file is not required.
-const char* HIS_FILE = ".shell_history";
+static const char* HIS_FILE = ".shell_history";
+
+static char* command = NULL;
 
 
-char* command = NULL;
-volatile sig_atomic_t exit_code = 0;
-
-
-
-void clean_exit( void ) {
+void clean_exit(void) {
     if (command) free(command);
     if (isatty(STDIN_FILENO)) {
         char history_file[PATH_MAX];
@@ -40,18 +39,15 @@ void clean_exit( void ) {
 }
 
 
-
 // clear input and go to the next line
-static void sigint_handler (int sig) {
+static void sigint_handler(int sig) {
     (void)sig;  // suppress unused warning
     write(STDOUT_FILENO, "\n", 1);
     rl_replace_line("", 0);
     rl_on_new_line();
     rl_redisplay();
-    exit_code = 130;
+    shell.exit_code = 130;
 }
-
-
 
 
 int main() {
@@ -103,17 +99,17 @@ int main() {
                 strcpy(prmpt_cwd, cwd);
 
             // Showing the error code in the prompt
-            if (exit_code == 0)
+            if (shell.exit_code == 0)
                 snprintf(prompt, prmpt_size, "\033[1;32m%s \033[1;34m%s\033[0m> ", user, prmpt_cwd);
             else
-                snprintf(prompt, prmpt_size, "\033[1;32m%s \033[1;34m%s \033[1;31m[%d]\033[0m> ", user, prmpt_cwd, exit_code);
+                snprintf(prompt, prmpt_size, "\033[1;32m%s \033[1;34m%s \033[1;31m[%d]\033[0m> ", user, prmpt_cwd, shell.exit_code);
 
 
             if (command) free(command);
             command = readline(prompt);
 
             if (!command) {
-                exit(exit_code);
+                exit(shell.exit_code);
             }
         }
         else {
@@ -139,7 +135,7 @@ int main() {
         size_t last_index = tokenize(command, argv, MAX_ARGS);
 
         // param expansion
-        expand_param(argv, exit_code);
+        expand_param(argv);
 
         char* args[MAX_ARGS];
         tokens_to_str_arr(argv, args);
@@ -153,21 +149,21 @@ int main() {
                 long val = strtol(args[1], &endptr, 10);
 
                 if (*endptr == '\0') {
-                    exit_code = (int)(val % 256);
-                    if (exit_code < 0) exit_code += 256;
+                    shell.exit_code = (int)(val % 256);
+                    if (shell.exit_code < 0) shell.exit_code += 256;
                 } else {
                     fprintf(stderr, "exit: The exit code must be a number.\n");
-                    exit_code = 2;
-                    exit(exit_code);
+                    shell.exit_code = 2;
+                    exit(shell.exit_code);
                 }
 
                 if (args[2] != NULL) {
-                    exit_code = 1;
+                    shell.exit_code = 1;
                     fprintf(stderr, "exit: Too many arguments.\n");
                     continue;
                 }
             }
-            exit(exit_code);
+            exit(shell.exit_code);
         }
 
 
@@ -213,7 +209,7 @@ int main() {
                                 strcmp(args[index + 1], ">") == 0 ||
                                 strcmp(args[index + 1], ">>") == 0) {
                                 fprintf(stderr, "Redirect error.\n");
-                                exit_code = 2;
+                                shell.exit_code = 2;
                                 break;
                             }
                             redir = 1;
@@ -228,7 +224,7 @@ int main() {
                             saved_out = dup(file_no);
                             if (saved_out < 0) {
                                 perror("dup");
-                                exit_code = errno;
+                                shell.exit_code = errno;
                                 break;
                             }
 
@@ -248,12 +244,12 @@ int main() {
 
                     // cd command
                     if (strcmp(current_args[0], "cd") == 0) {
-                        exit_code = cd_handle(current_args, cwd, last_dir);
+                        shell.exit_code = cd_handle(current_args, cwd, last_dir);
                     }
                     // pwd command
                     else if (strcmp(current_args[0], "pwd") == 0) {
                         printf("%s\n", cwd);
-                        exit_code = 0;
+                        shell.exit_code = 0;
                     }
                     else {
                         // execute command
@@ -263,7 +259,7 @@ int main() {
                         if (pid > 0) {
                             wait(&status);
                             if (WIFEXITED(status))
-                                exit_code = WEXITSTATUS(status);
+                                shell.exit_code = WEXITSTATUS(status);
                         }
                         else if (pid == 0) {
                             signal(SIGINT, SIG_DFL);
@@ -274,7 +270,7 @@ int main() {
                         }
                         else {
                             fprintf(stderr, "Fork failed.\n");
-                            exit_code = 1;
+                            shell.exit_code = 1;
                         }
                     }
 
@@ -295,14 +291,14 @@ int main() {
 
                 else {
                     fprintf(stderr, "Unexpected operator.\n");
-                    exit_code = 1;
+                    shell.exit_code = 1;
                     break;
                 }
 
                 if (j < last_index && args[j] != NULL) {
-                    if (strcmp(args[j], "&&") == 0 && exit_code != 0) {
+                    if (strcmp(args[j], "&&") == 0 && shell.exit_code != 0) {
                         break;
-                    } else if (strcmp(args[j], "||") == 0 && exit_code == 0) {
+                    } else if (strcmp(args[j], "||") == 0 && shell.exit_code == 0) {
                         break;
                     }
                 }

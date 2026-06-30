@@ -1,8 +1,9 @@
 #include <stdlib.h>
+
 #include "test_lib.h"
 #include "tokenize.h"
 #include "expansion.h"
-
+#include "shell.h"
 
 #define MAX_ARGS 64
 
@@ -18,15 +19,14 @@ Token args[MAX_ARGS];
 char* arr[MAX_ARGS];
 
 
-
 static void
-set_up () {
+set_up() {
     setenv("TEST_ENV_VAR", "test", 1);
 }
 
 
 static void
-test_param_expansion_with_home_var () {
+test_param_expansion_with_home_var() {
     char* env_home = getenv("HOME");
     if (!env_home) env_home = "";
 
@@ -37,7 +37,7 @@ test_param_expansion_with_home_var () {
     };
 
     tokenize(c.command, args, MAX_ARGS);
-    expand_param(args, 0);
+    expand_param(args);
 
     tokens_to_str_arr(args, arr);
 
@@ -47,9 +47,8 @@ test_param_expansion_with_home_var () {
 }
 
 
-
 static void
-test_param_expansion_unquoted () {
+test_param_expansion_unquoted() {
     TestCase c = {
         "echo $TEST_ENV_VAR",
         {"echo", "test", NULL},
@@ -57,7 +56,7 @@ test_param_expansion_unquoted () {
     };
 
     tokenize(c.command, args, MAX_ARGS);
-    expand_param(args, 0);
+    expand_param(args);
 
     tokens_to_str_arr(args, arr);
 
@@ -67,9 +66,8 @@ test_param_expansion_unquoted () {
 }
 
 
-
 static void
-test_param_expansion_double_quoted () {
+test_param_expansion_double_quoted() {
     TestCase c = {
         "echo \"$TEST_ENV_VAR\"",
         {"echo", "test", NULL},
@@ -77,7 +75,7 @@ test_param_expansion_double_quoted () {
     };
 
     tokenize(c.command, args, MAX_ARGS);
-    expand_param(args, 0);
+    expand_param(args);
 
     tokens_to_str_arr(args, arr);
 
@@ -87,9 +85,8 @@ test_param_expansion_double_quoted () {
 }
 
 
-
 static void
-test_param_expansion_single_quoted () {
+test_param_expansion_single_quoted() {
     TestCase c = {
         "echo '$TEST_ENV_VAR'",
         {"echo", "$TEST_ENV_VAR", NULL},
@@ -97,7 +94,7 @@ test_param_expansion_single_quoted () {
     };
 
     tokenize(c.command, args, MAX_ARGS);
-    expand_param(args, 0);
+    expand_param(args);
 
     tokens_to_str_arr(args, arr);
 
@@ -107,9 +104,8 @@ test_param_expansion_single_quoted () {
 }
 
 
-
 static void
-test_param_expansion_with_slash () {
+test_param_expansion_with_slash() {
     TestCase c = {
         "echo /hello/$TEST_ENV_VAR/world",
         {"echo", "/hello/test/world", NULL},
@@ -117,7 +113,7 @@ test_param_expansion_with_slash () {
     };
 
     tokenize(c.command, args, MAX_ARGS);
-    expand_param(args, 0);
+    expand_param(args);
 
     tokens_to_str_arr(args, arr);
 
@@ -127,9 +123,10 @@ test_param_expansion_with_slash () {
 }
 
 
-
 static void
-test_param_expansion_exit_code () {
+test_param_expansion_exit_code() {
+    shell.exit_code = 42;
+
     TestCase c = {
         "echo $?",
         {"echo", "42", NULL},
@@ -137,7 +134,7 @@ test_param_expansion_exit_code () {
     };
 
     tokenize(c.command, args, MAX_ARGS);
-    expand_param(args, 42);
+    expand_param(args);
 
     tokens_to_str_arr(args, arr);
 
@@ -147,9 +144,8 @@ test_param_expansion_exit_code () {
 }
 
 
-
 static void
-test_param_expansion_digits () {
+test_param_expansion_digits() {
     TestCase c = {
         "echo $1 foo$42bar",
         {"echo", "", "foobar", NULL},
@@ -157,7 +153,7 @@ test_param_expansion_digits () {
     };
 
     tokenize(c.command, args, MAX_ARGS);
-    expand_param(args, 0);
+    expand_param(args);
 
     tokens_to_str_arr(args, arr);
 
@@ -167,9 +163,8 @@ test_param_expansion_digits () {
 }
 
 
-
 static void
-test_param_expansion_dollar_sign_as_literal () {
+test_param_expansion_dollar_sign_as_literal() {
     TestCase c = {
         "echo $ $$ $- foo$ 42$",
         {"echo", "$", "$$", "$-", "foo$", "42$", NULL},
@@ -177,7 +172,7 @@ test_param_expansion_dollar_sign_as_literal () {
     };
 
     tokenize(c.command, args, MAX_ARGS);
-    expand_param(args, 0);
+    expand_param(args);
 
     tokens_to_str_arr(args, arr);
 
@@ -187,9 +182,8 @@ test_param_expansion_dollar_sign_as_literal () {
 }
 
 
-
 static void
-test_param_expansion_undeclared_var () {
+test_param_expansion_undeclared_var() {
     unsetenv("UNDECLARED_TEST_VAR");
 
     TestCase c = {
@@ -199,7 +193,7 @@ test_param_expansion_undeclared_var () {
     };
 
     tokenize(c.command, args, MAX_ARGS);
-    expand_param(args, 0);
+    expand_param(args);
 
     tokens_to_str_arr(args, arr);
 
@@ -209,10 +203,8 @@ test_param_expansion_undeclared_var () {
 }
 
 
-
-
-
-void run_tests ( void ) {
+void
+run_tests(void) {
     set_up();
     test_param_expansion_with_home_var();
     test_param_expansion_unquoted();
@@ -228,8 +220,8 @@ void run_tests ( void ) {
 }
 
 
-
-int main() {
+int
+main() {
     run_tests();
     return 0;
 }

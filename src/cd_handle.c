@@ -4,6 +4,8 @@
 #include <string.h>
 #include <limits.h>
 
+#include "cd_handle.h"
+
 
 // cd command
 int cd_handle(char** args, char* cwd, char* last_dir) {

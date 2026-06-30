@@ -2,21 +2,9 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "tokenize.h"
+
 #define MAX_BUF 4096
-
-typedef enum {
-    NORMAL=1,
-    SINGLE_Q,
-    DOUBLE_Q
-} Status;
-
-
-
-typedef struct {
-    char* value;
-    Status status;
-} Token;
-
 
 
 void free_tokens(Token* args) {
@@ -25,7 +13,7 @@ void free_tokens(Token* args) {
 }
 
 
-void tokens_to_str_arr (Token* args, char** arr) {
+void tokens_to_str_arr(Token* args, char** arr) {
     int i;
     for (i = 0; args[i].value; ++i)
         arr[i] = args[i].value;
@@ -33,8 +21,7 @@ void tokens_to_str_arr (Token* args, char** arr) {
 }
 
 
-static void
-flush_token (char* buf, size_t* len, Status status, Token* args, size_t* iter) {
+static void flush_token(char* buf, size_t* len, Status status, Token* args, size_t* iter) {
     if (*len == 0) return;
     buf[*len] = '\0';
     args[*iter].value = strdup(buf);

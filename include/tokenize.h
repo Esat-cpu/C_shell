@@ -1,7 +1,6 @@
 #ifndef TOKENIZE_H
 #define TOKENIZE_H
 
-
 #define for_each_token(token, args) \
     for (Token* (token) = (args); (token)->value; ++(token))
 
@@ -19,9 +18,9 @@ typedef struct {
 } Token;
 
 
-void tokens_to_str_arr(Token*, char**);
+void tokens_to_str_arr(Token* args, char** arr);
 
-void free_tokens(Token*);
+void free_tokens(Token* args);
 
 size_t tokenize(const char* command, Token* args, size_t max_args);
 

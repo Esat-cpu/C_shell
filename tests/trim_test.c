@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+
 #include "trim.h"
 
 
@@ -8,8 +9,10 @@ struct TrimTestCase {
     char expected[128];
 };
 
+
 // for adding more tests edit here
-static void run_trim_test(void) {
+static void
+run_trim_test(void) {
     struct TrimTestCase cases[] = {
         {"   exit ", "exit"},
         {"exit", "exit"},
@@ -40,7 +43,9 @@ static void run_trim_test(void) {
             printf("[OK] Trim test successful.\n");
 }
 
-int main() {
+
+int
+main() {
     run_trim_test();
     return 0;
 }

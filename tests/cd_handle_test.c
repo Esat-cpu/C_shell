@@ -7,6 +7,7 @@
 #include <limits.h>
 #include <string.h>
 #include <fcntl.h>
+
 #include "cd_handle.h"
 
 #ifndef PATH_MAX
@@ -22,7 +23,9 @@ struct CdTestCase {
     char* desc;
 };
 
-static void run_cd_handle_test( void ) {
+
+static void
+run_cd_handle_test(void) {
     char cwd[PATH_MAX];
     char last_dir[PATH_MAX];
     char first_dir[PATH_MAX];
@@ -95,7 +98,8 @@ static void run_cd_handle_test( void ) {
 }
 
 
-int main() {
+int
+main() {
     run_cd_handle_test();
     return 0;
 }

@@ -2,12 +2,15 @@
 #define TEST_LIB_H
 
 
-void assert_eq_str (const char*, const char*, const char*, const char*, int);
-void assert_eq_long (long, long, const char*, const char*, int);
+void assert_eq_str(const char* str1, const char* str2,
+                   const char* desc, const char* file, int line);
+void assert_eq_long(long num1, long num2,
+                    const char* desc, const char* file, int line);
 
-void assert_eq_str_arr (char **, char **, const char*, const char*, int);
+void assert_eq_str_arr(char** arr1, char** arr2,
+                       const char* desc, const char* file, int line);
 
-void end(const char*);
+void end(const char* name);
 
 
 #define ASSERT_EQ(X, Y, desc) _Generic(X, \
@@ -22,3 +25,4 @@ void end(const char*);
 #define END(name) end(name)
 
 #endif
+
