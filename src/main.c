@@ -215,7 +215,7 @@ int main() {
 
                     // cd command
                     if (strcmp(current_args[0], "cd") == 0) {
-                        shell.exit_code = cd(current_args, shell.cwd, shell.oldpwd);
+                        shell.exit_code = cd(current_args);
                     }
                     // pwd command
                     else if (strcmp(current_args[0], "pwd") == 0) {

@@ -1,7 +1,7 @@
 #ifndef CD_H
 #define CD_H
 
-int cd(char** args, char* cwd, char* last_dir);
+int cd(char** args);
 
 #endif
 

@@ -15,8 +15,9 @@ $(TARGET): release_dir $(wildcard $(SRCDIR)/*.c $(SRCCMD)/*.c $(INCDIR)/*.h $(IN
 		-lreadline -o build/release/$(TARGET)
 
 
-test_cd: test_dir $(TESTDIR)/cd_test.c $(SRCCMD)/cd.c $(INCCMD)/cd.h
-	@$(CC) $(CFLAGS) $(TESTDIR)/cd_test.c $(SRCCMD)/cd.c -o build/test/cd_test
+test_cd: test_dir $(TESTDIR)/cd_test.c $(SRCCMD)/cd.c $(INCCMD)/cd.h $(INCDIR)/shell.h
+	@$(CC) $(CFLAGS) $(TESTDIR)/cd_test.c $(SRCCMD)/cd.c $(SRCDIR)/shell.c \
+		-o build/test/cd_test
 	@build/test/cd_test
 
 

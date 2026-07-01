@@ -9,6 +9,7 @@
 #include <fcntl.h>
 
 #include "commands/cd.h"
+#include "shell.h"
 
 #ifndef PATH_MAX
 #define PATH_MAX 4096
@@ -18,7 +19,7 @@
 struct CdTestCase {
     char** input;
     char* expected_cwd;
-    char* expected_last_dir;
+    char* expected_oldpwd;
     int expected_code;
     char* desc;
 };
@@ -26,8 +27,6 @@ struct CdTestCase {
 
 static void
 run_cd_test(void) {
-    char cwd[PATH_MAX];
-    char last_dir[PATH_MAX];
     char first_dir[PATH_MAX];
     char* home = getenv("HOME");
 
@@ -36,8 +35,8 @@ run_cd_test(void) {
         perror("getcwd");
         return;
     }
-    strcpy(cwd, first_dir);
-    strcpy(last_dir, first_dir);
+    strcpy(shell.cwd, first_dir);
+    strcpy(shell.oldpwd, first_dir);
 
 
     // for adding more tests edit here
@@ -51,7 +50,7 @@ run_cd_test(void) {
     char* cmd8[] = {"cd", "~", NULL};
 
     //+ and here
-    struct CdTestCase cases[] = { // command, expected cwd, last_dir, exit code
+    struct CdTestCase cases[] = { // command, expected cwd, oldpwd, exit code
         {cmd1, home, first_dir, 0, "an absolute path"},
         {cmd2, "/", home, 0,       "root dir"},
         {cmd3, "/", home, 1,       "too many args"},
@@ -74,13 +73,13 @@ run_cd_test(void) {
     int er = 0;
     unsigned i;
     for (i = 0; i < total; i++) {
-        int status = cd(cases[i].input, cwd, last_dir);
+        int status = cd(cases[i].input);
         fflush(stdout);
         fflush(stderr);
 
         if (
-            strcmp(cwd, cases[i].expected_cwd) != 0 ||
-            strcmp(last_dir, cases[i].expected_last_dir) != 0 ||
+            strcmp(shell.cwd, cases[i].expected_cwd) != 0 ||
+            strcmp(shell.oldpwd, cases[i].expected_oldpwd) != 0 ||
             status != cases[i].expected_code
         ) {
             er = 1;

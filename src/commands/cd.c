@@ -5,10 +5,11 @@
 #include <limits.h>
 
 #include "commands/cd.h"
+#include "shell.h"
 
 
 // cd command
-int cd(char** args, char* cwd, char* last_dir) {
+int cd(char** args) {
     char* home = getenv("HOME");
     char *new_path = malloc(PATH_MAX);
 
@@ -36,13 +37,7 @@ int cd(char** args, char* cwd, char* last_dir) {
 
 
     if (*new_path == '\0' && args[1] && strcmp(args[1], "-") == 0) { //previous directory
-        if (!last_dir || *last_dir == '\0') {
-            fprintf(stderr, "cd: last directory not set");
-            free(new_path);
-            return 1;
-        }
-
-        strcpy(new_path, last_dir); // set new_path to last_dir
+        strcpy(new_path, shell.oldpwd); // set new_path to shell.oldpwd
         printf("%s\n", new_path);
     }
 
@@ -69,12 +64,15 @@ int cd(char** args, char* cwd, char* last_dir) {
         return 1;
     }
     else {
-        if (last_dir) strcpy(last_dir, cwd);
+        strcpy(shell.oldpwd, shell.cwd);
 
-        if (getcwd(cwd, PATH_MAX) == NULL) {
+        if (getcwd(shell.cwd, PATH_MAX) == NULL) {
             perror("cd");
             return 1;
         }
+
+        setenv("PWD", shell.cwd, 1);
+        setenv("OLDPWD", shell.oldpwd, 1);
     }
 
     return 0;
