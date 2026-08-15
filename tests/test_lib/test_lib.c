@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "test_lib.h"
+
 #define GREEN  "\033[0;32m"
 #define RED    "\033[0;31m"
 #define RESET  "\033[0m"

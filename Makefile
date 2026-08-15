@@ -1,66 +1,118 @@
-CC      = gcc
-CFLAGS  = -Wall -Wextra -I$(INCDIR)
-TARGET  = shell
-SRCDIR  = src
-SRCCMD  = $(SRCDIR)/commands
-TESTDIR = tests
-TESTLIB = tests/test_lib
-INCDIR  = include
-INCCMD  = $(INCDIR)/commands
-
-all: $(TARGET)
-
-$(TARGET): release_dir $(wildcard $(SRCDIR)/*.c $(SRCCMD)/*.c $(INCDIR)/*.h $(INCCMD)/*.h)
-	$(CC) $(CFLAGS) -O2 $(wildcard $(SRCDIR)/*.c $(SRCCMD)/*.c) \
-		-lreadline -o build/release/$(TARGET)
+# Compiler and target executable name
+CC          := gcc
+TARGET      := she
+VERSION     := 0.1.0
 
 
-test_cd: test_dir $(TESTDIR)/cd_test.c $(SRCCMD)/cd.c $(INCCMD)/cd.h $(INCDIR)/shell.h
-	@$(CC) $(CFLAGS) $(TESTDIR)/cd_test.c $(SRCCMD)/cd.c $(SRCDIR)/shell.c \
-		-o build/test/cd_test
-	@build/test/cd_test
+# Directories, files and their flags
+BUILD_DIR   := build
+SRC_DIR     := src
+
+RELEASE_DIR  := $(BUILD_DIR)/release
+DEBUG_DIR    := $(BUILD_DIR)/debug
 
 
-test_trim: test_dir $(TESTDIR)/trim_test.c $(SRCDIR)/trim.c $(INCDIR)/trim.h
-	@$(CC) $(CFLAGS) $(TESTDIR)/trim_test.c $(SRCDIR)/trim.c -o build/test/trim_test
-	@build/test/trim_test
+DEBUG ?= 0
+
+ifeq ($(DEBUG),0)
+OBJ_DIR     := $(RELEASE_DIR)/obj
+TARGET_EXEC := $(RELEASE_DIR)/$(TARGET)
+# Flags for release
+CFLAGS      := -O2
+else
+OBJ_DIR     := $(DEBUG_DIR)/obj
+TARGET_EXEC := $(DEBUG_DIR)/$(TARGET)
+# Flags for debug
+CFLAGS      := -g3 -O0
+endif
 
 
-test_tokenize: test_dir $(TESTDIR)/tokenize_test.c $(SRCDIR)/tokenize.c
-	@$(CC) $(CFLAGS) -I$(TESTLIB) -o build/test/tokenize_test \
-		$(TESTLIB)/test_lib.c $(TESTDIR)/tokenize_test.c $(SRCDIR)/tokenize.c
-	@build/test/tokenize_test
+SRCS        := $(shell find $(SRC_DIR) -type f -name "*.c")
+OBJS        := $(SRCS:%.c=$(OBJ_DIR)/%.o)
+
+INC_DIRS    := include
+INC_FLAGS   := $(addprefix -I,$(INC_DIRS))
 
 
-test_expansion: test_dir $(TESTDIR)/expansion_test.c $(SRCDIR)/expansion.c
-	@$(CC) $(CFLAGS) -I$(TESTLIB) -o build/test/expansion_test \
-		$(TESTLIB)/test_lib.c \
-		$(TESTDIR)/expansion_test.c \
-		$(SRCDIR)/expansion.c \
-		$(SRCDIR)/tokenize.c \
-		$(SRCDIR)/shell.c
-	@build/test/expansion_test
+# Test directories and files
+TEST_DIR    := tests
+TEST_LIB    := $(TEST_DIR)/test_lib
+
+TEST_SRCS   := $(shell find $(TEST_DIR) -type f -name "*.c")
+TEST_OBJS   := $(TEST_SRCS:%.c=$(OBJ_DIR)/%.o)
+
+TEST_BIN_DIR := $(BUILD_DIR)/test
 
 
+# Compiler Flags
+DEPS        := $(OBJS:%.o=%.d) $(TEST_OBJS:%.o=%.d)
+DEPFLAGS    := -MMD -MP
 
-test: test_cd test_trim test_tokenize test_expansion
+CPPFLAGS    := $(INC_FLAGS) $(DEPFLAGS) -DSHE_VERSION=\"$(VERSION)\"
+CFLAGS      += -Wall -Wextra
+LDFLAGS     := -lreadline
 
 
-release_dir:
-	@mkdir -p build/release
+# Targets
 
-test_dir:
-	@mkdir -p build/test
+all: $(TARGET_EXEC)
 
+$(TARGET_EXEC): $(OBJS)
+	@mkdir -p $(@D)
+	$(CC) $^ -o $@ $(LDFLAGS)
+
+
+$(OBJ_DIR)/%.o: %.c
+	@mkdir -p $(@D)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+
+# Test Targets
+$(OBJ_DIR)/$(TEST_DIR)/%.o: $(TEST_DIR)/%.c
+	@mkdir -p $(@D)
+	$(CC) $(CPPFLAGS) -I$(TEST_LIB) $(CFLAGS) -c $< -o $@
+
+
+$(TEST_BIN_DIR)/cd_test: $(OBJ_DIR)/$(TEST_DIR)/cd_test.o \
+							$(OBJ_DIR)/$(SRC_DIR)/commands/cd.o \
+							$(OBJ_DIR)/$(SRC_DIR)/shell.o
+	@mkdir -p $(@D)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $^ -o $@
+
+
+$(TEST_BIN_DIR)/trim_test: $(OBJ_DIR)/$(TEST_DIR)/trim_test.o \
+							$(OBJ_DIR)/$(SRC_DIR)/trim.o
+	@mkdir -p $(@D)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $^ -o $@
+
+
+$(TEST_BIN_DIR)/tokenize_test: $(OBJ_DIR)/$(TEST_DIR)/tokenize_test.o \
+								$(OBJ_DIR)/$(SRC_DIR)/tokenize.o \
+								$(OBJ_DIR)/$(TEST_LIB)/test_lib.o
+	@mkdir -p $(@D)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $^ -o $@
+
+
+$(TEST_BIN_DIR)/expansion_test: $(OBJ_DIR)/$(TEST_DIR)/expansion_test.o \
+								$(OBJ_DIR)/$(TEST_LIB)/test_lib.o \
+								$(OBJ_DIR)/$(SRC_DIR)/expansion.o \
+								$(OBJ_DIR)/$(SRC_DIR)/tokenize.o \
+								$(OBJ_DIR)/$(SRC_DIR)/shell.o
+	@mkdir -p $(@D)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $^ -o $@
+
+
+test: $(TEST_BIN_DIR)/cd_test \
+		$(TEST_BIN_DIR)/trim_test \
+		$(TEST_BIN_DIR)/tokenize_test \
+		$(TEST_BIN_DIR)/expansion_test
+	$(foreach bin,$^,./$(bin);)
+
+
+# Clean build
 clean:
-	rm -f $(wildcard build/release/* build/test/*)
+	rm -r $(BUILD_DIR)
 
-distclean:
-	rm -fr build
+.PHONY: all clean test
 
-
-.PHONY: all \
-	 clean distclean \
-	 test test_cd test_trim test_tokenize test_expansion \
-	 release_dir test_dir \
-
+-include $(DEPS)
