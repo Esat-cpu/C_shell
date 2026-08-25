@@ -4,4 +4,3 @@
 void prompt_build(char* prompt, size_t buf_size, const char* home, const char* user);
 
 #endif
-

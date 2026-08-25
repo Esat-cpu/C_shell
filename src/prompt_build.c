@@ -24,4 +24,3 @@ void prompt_build(char* prompt, size_t buf_size, const char* home, const char* u
         snprintf(prompt, buf_size, "\033[1;32m%s \033[1;34m%s \033[1;31m[%d]\033[0m> ",
                  user, prmpt_cwd, shell.exit_code);
 }
-

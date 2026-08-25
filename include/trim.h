@@ -4,4 +4,3 @@
 void trim(char *str);
 
 #endif
-

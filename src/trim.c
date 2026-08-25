@@ -15,4 +15,3 @@ void trim(char *str) {
         end--;
     }
 }
-

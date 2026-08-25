@@ -7,45 +7,49 @@
 #define MAX_BUF 4096
 
 
-void free_tokens(Token* args) {
-    for (int i = 0; args[i].value; ++i)
-        free(args[i].value);
+// Frees strings of tokens
+void free_tokens(Token* tokens) {
+    for (int i = 0; tokens[i].value; ++i)
+        free(tokens[i].value);
 }
 
 
-void tokens_to_str_arr(Token* args, char** arr) {
+// Fills a allocated array with only strings of tokens
+void tokens_to_str_arr(Token* tokens, char** arr) {
     int i;
-    for (i = 0; args[i].value; ++i)
-        arr[i] = args[i].value;
+    for (i = 0; tokens[i].value; ++i)
+        arr[i] = tokens[i].value;
     arr[i] = NULL;
 }
 
 
-static void flush_token(char* buf, size_t* len, Status status, Token* args, size_t* iter) {
+// Adds a token to token array with given attributes
+static void flush_token(char* buf, size_t* len, QuoteType status, Token* tokens, size_t* iter) {
     if (*len == 0) return;
     buf[*len] = '\0';
-    args[*iter].value = strdup(buf);
-    args[*iter].status = status;
+    tokens[*iter].value = strdup(buf);
+    tokens[*iter].quote_type = status;
     (*iter)++;
     *len = 0;
 }
 
 
-size_t tokenize(const char* command, Token* args, size_t max_args) {
-    Status status = NORMAL;
+// tokenize
+size_t tokenize(const char* input, Token* tokens, size_t max_tokens) {
+    QuoteType status = NORMAL;
     int escape = 0;
 
-    size_t iter = 0; // for args
+    size_t iter = 0; // for tokens
 
     char buf[MAX_BUF];
     size_t len = 0; // for buf
 
 
-    for (const char* ch = command; *ch; ch++) {
+    for (const char* ch = input; *ch; ch++) {
         if (len >= MAX_BUF - 1)
-            flush_token(buf, &len, status, args, &iter);
+            flush_token(buf, &len, status, tokens, &iter);
 
-        if (iter >= max_args - 1) break;
+        if (iter >= max_tokens - 1) break;
 
         if (escape) {
             buf[len++] = *ch;
@@ -63,7 +67,7 @@ size_t tokenize(const char* command, Token* args, size_t max_args) {
         }
 
         if (*ch == ' ' && status == NORMAL) {
-            flush_token(buf, &len, NORMAL, args, &iter);
+            flush_token(buf, &len, NORMAL, tokens, &iter);
             continue;
         }
 
@@ -76,7 +80,7 @@ size_t tokenize(const char* command, Token* args, size_t max_args) {
             }
 
             if (status == DOUBLE_Q) {
-                flush_token(buf, &len, DOUBLE_Q, args, &iter);
+                flush_token(buf, &len, DOUBLE_Q, tokens, &iter);
                 status = NORMAL;
                 continue;
             }
@@ -90,7 +94,7 @@ size_t tokenize(const char* command, Token* args, size_t max_args) {
             }
 
             if (status == SINGLE_Q) {
-                flush_token(buf, &len, SINGLE_Q, args, &iter);
+                flush_token(buf, &len, SINGLE_Q, tokens, &iter);
                 status = NORMAL;
                 continue;
             }
@@ -99,8 +103,7 @@ size_t tokenize(const char* command, Token* args, size_t max_args) {
         buf[len++] = *ch;
     }
 
-    flush_token(buf, &len, NORMAL, args, &iter);
-    args[iter].value = NULL;
+    flush_token(buf, &len, NORMAL, tokens, &iter);
+    tokens[iter].value = NULL;
     return iter; // the index of NULL
 }
-

@@ -132,11 +132,10 @@ static void expand_param_in_token(Token* token) {
 }
 
 
-void expand_param(Token* args) {
-    for_each_token (token, args) {
+void expand_param(Token* tokens) {
+    for_each_token (token, tokens) {
         if (strchr(token->value, '$') && token->status != SINGLE_Q) {
             expand_param_in_token(token);
         }
     }
 }
-

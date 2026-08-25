@@ -2,4 +2,3 @@
 
 
 struct ShellState shell = {0};
-
