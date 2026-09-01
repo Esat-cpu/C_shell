@@ -1,5 +1,3 @@
-#include <string.h>
-
 #include "test_lib.h"
 #include "tokenize.h"
 
@@ -76,8 +74,8 @@ test_double_quotes() {
 static void
 test_double_quotes_with_escape() {
     TestCase c = {
-        "echo \"hello \\\" world\" test",
-        {"echo", "hello \" world", "test", NULL},
+        "echo \"hello \\\" \\world\" test",
+        {"echo", "hello \" \\world", "test", NULL},
         __func__
     };
 
@@ -134,7 +132,7 @@ test_status_of_normal_tokens() {
 
     tokenize(c.command, args, MAX_ARGS);
 
-    ASSERT_EQ (args[0].status, NORMAL, c.desc);
+    ASSERT_EQ (args[0].quote_type, NORMAL, c.desc);
 
     free_tokens(args);
 }
@@ -150,8 +148,8 @@ test_status_of_double_quoted_tokens() {
 
     tokenize(c.command, args, MAX_ARGS);
 
-    ASSERT_EQ (args[0].status, NORMAL, c.desc);
-    ASSERT_EQ (args[1].status, DOUBLE_Q, c.desc);
+    ASSERT_EQ (args[0].quote_type, NORMAL, c.desc);
+    ASSERT_EQ (args[1].quote_type, DOUBLE_Q, c.desc);
 
     free_tokens(args);
 }
@@ -167,8 +165,8 @@ test_status_of_single_quoted_tokens() {
 
     tokenize(c.command, args, MAX_ARGS);
 
-    ASSERT_EQ (args[0].status, SINGLE_Q, c.desc);
-    ASSERT_EQ (args[1].status, NORMAL, c.desc);
+    ASSERT_EQ (args[0].quote_type, SINGLE_Q, c.desc);
+    ASSERT_EQ (args[1].quote_type, NORMAL, c.desc);
 
     free_tokens(args);
 }

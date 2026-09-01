@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include "tokenize.h"
 
@@ -23,21 +24,30 @@ void tokens_to_str_arr(Token* tokens, char** arr) {
 }
 
 
-// Adds a token to token array with given attributes
-static void flush_token(char* buf, size_t* len, QuoteType status, Token* tokens, size_t* iter) {
-    if (*len == 0) return;
-    buf[*len] = '\0';
-    tokens[*iter].value = strdup(buf);
-    tokens[*iter].quote_type = status;
-    (*iter)++;
-    *len = 0;
+// Inserts a token to token array with given attributes
+static int flush_token(char* buf,
+                        size_t len,
+                        QuoteType status,
+                        Token* tokens,
+                        size_t iter,
+                        TokenType type) {
+    // Allow empty entries in quoted modes but not in NORMAL mode
+    if (len == 0 && status == NORMAL) return 0;
+
+    buf[len] = '\0';
+    tokens[iter].value = strdup(buf);
+    tokens[iter].quote_type = status;
+    tokens[iter].token_type = type;
+    return 1;
 }
 
 
 // tokenize
 size_t tokenize(const char* input, Token* tokens, size_t max_tokens) {
     QuoteType status = NORMAL;
-    int escape = 0;
+    TokenType type = T_WORD;
+    bool escape = false;
+    bool space = false;
 
     size_t iter = 0; // for tokens
 
@@ -46,14 +56,28 @@ size_t tokenize(const char* input, Token* tokens, size_t max_tokens) {
 
 
     for (const char* ch = input; *ch; ch++) {
-        if (len >= MAX_BUF - 1)
-            flush_token(buf, &len, status, tokens, &iter);
+        if (len >= MAX_BUF - 1) {
+            int f = flush_token(buf, len, status, tokens, iter, type);
+            if (f) { iter++; len = 0; }
+        }
 
         if (iter >= max_tokens - 1) break;
 
+        //  If escape status is 1 and the status is NORMAL,
+        //+ append the current character as-is and continue.
+        //  If the status is DOUBLE_Q,
+        //+ escape only special characters in double quotes.
+        //+ With other characters take the '\' character as well.
+        //  Also if the current character is space,
+        //+ the space flag will not be changed.
         if (escape) {
+            const char* special_characters = "$\"\\";
+            if (status == DOUBLE_Q && !strchr(special_characters, *ch)) {
+                buf[len++] = '\\';
+            }
+
             buf[len++] = *ch;
-            escape = 0;
+            escape = false;
             continue;
         }
 
@@ -62,14 +86,122 @@ size_t tokenize(const char* input, Token* tokens, size_t max_tokens) {
         //  if so, do not take the '\' character and set
         //+ escape status to 1
         if (*ch == '\\' && !escape && status != SINGLE_Q) {
-            escape = 1;
+            escape = true;
             continue;
         }
 
-        if (*ch == ' ' && status == NORMAL) {
-            flush_token(buf, &len, NORMAL, tokens, &iter);
+        // Operator cases
+        // PIPE
+        if (*ch == '|' && status == NORMAL) {
+            const char *next_ch = ch+1;
+
+            int f = flush_token(buf, len, NORMAL, tokens, iter, type);
+            if (f) { iter++; len = 0; }
+
+            // PIPE Operator (|)
+            if (*next_ch != '|') {
+                strcpy(buf, "|");
+                flush_token(buf, strlen(buf), NORMAL, tokens, iter, T_PIPE);
+                iter++;
+                continue;
+            }
+            // OR Operator (||)
+            else {
+                strcpy(buf, "||");
+                flush_token(buf, strlen(buf), NORMAL, tokens, iter, T_OR);
+                iter++;
+                ch++;
+                continue;
+            }
+        }
+
+        // AND
+        if (*ch == '&' && status == NORMAL) {
+            const char *next_ch = ch+1;
+
+            // AND Operator (&&)
+            if (*next_ch == '&') {
+                int f = flush_token(buf, len, NORMAL, tokens, iter, type);
+                if (f) { iter++; len = 0; }
+
+                strcpy(buf, "&&");
+                flush_token(buf, strlen(buf), NORMAL, tokens, iter, T_AND);
+                iter++;
+                ch++;
+                continue;
+            }
+        }
+
+        // Redirection out
+        if (*ch == '>' && status == NORMAL) {
+            const char *next_ch = ch+1;
+
+            int f = flush_token(buf, len, NORMAL, tokens, iter, type);
+            if (f) { iter++; len = 0; }
+
+            TokenType redir_type;
+
+            // >> operator
+            if (*next_ch == '>') {
+                strcpy(buf, ">>");
+                redir_type = T_REDIR_OUT_APPEND;
+                ch++;
+            }
+            // > operator
+            else {
+                strcpy(buf, ">");
+                redir_type = T_REDIR_OUT;
+            }
+
+            flush_token(buf, strlen(buf), NORMAL, tokens, iter, redir_type);
+            iter++;
             continue;
         }
+
+        // Redirection out for fileno 2 (stderr)
+        // It requires a space before it
+        if (*ch == '2' && space && status == NORMAL) {
+            const char *next_ch = ch+1;
+
+            // If it is a redirection operator
+            if (*next_ch == '>') {
+                int f = flush_token(buf, len, NORMAL, tokens, iter, type);
+                if (f) { iter++; len = 0; }
+
+                const char *next_next_ch = NULL;
+                if (*next_ch) next_next_ch = next_ch+1;
+                TokenType redir_type;
+
+                // 2>> operator
+                if (next_next_ch && *next_next_ch == '>') {
+                    strcpy(buf, "2>>");
+                    redir_type = T_REDIR_ERR_OUT_APPEND;
+                    ch += 2;
+                }
+                // 2> operator
+                else {
+                    strcpy(buf, "2>");
+                    redir_type = T_REDIR_ERR_OUT;
+                    ch++;
+                }
+
+                flush_token(
+                        buf, strlen(buf), NORMAL, tokens, iter, redir_type);
+                iter++;
+                continue;
+            }
+        }
+
+
+        // space case in normal mode
+        if (*ch == ' ' && status == NORMAL) {
+            int f = flush_token(buf, len, NORMAL, tokens, iter, type);
+            if (f) { iter++; len = 0; }
+
+            space = true;
+            continue;
+        }
+        space = false;
 
 
         // double quote case
@@ -80,7 +212,9 @@ size_t tokenize(const char* input, Token* tokens, size_t max_tokens) {
             }
 
             if (status == DOUBLE_Q) {
-                flush_token(buf, &len, DOUBLE_Q, tokens, &iter);
+                int f = flush_token(buf, len, DOUBLE_Q, tokens, iter, type);
+                if (f) { iter++; len = 0; }
+
                 status = NORMAL;
                 continue;
             }
@@ -94,7 +228,9 @@ size_t tokenize(const char* input, Token* tokens, size_t max_tokens) {
             }
 
             if (status == SINGLE_Q) {
-                flush_token(buf, &len, SINGLE_Q, tokens, &iter);
+                int f = flush_token(buf, len, SINGLE_Q, tokens, iter, type);
+                if (f) { iter++; len = 0; }
+
                 status = NORMAL;
                 continue;
             }
@@ -103,7 +239,7 @@ size_t tokenize(const char* input, Token* tokens, size_t max_tokens) {
         buf[len++] = *ch;
     }
 
-    flush_token(buf, &len, NORMAL, tokens, &iter);
+    if (flush_token(buf, len, NORMAL, tokens, iter, type)) ++iter;
     tokens[iter].value = NULL;
     return iter; // the index of NULL
 }
