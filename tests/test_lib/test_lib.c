@@ -116,5 +116,6 @@ end(const char* name) {
     printf("Success: %zu  |  Fail: %zu\n", test_success, test_fail);
     if (test_fail == 0)
         printf("[" GREEN "OK" RESET "] %s test successful.\n", name);
+    printf("-------------------------------------------------------\n");
 }
 
