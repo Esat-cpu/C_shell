@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "test_lib.h"
 
@@ -14,12 +15,22 @@ static size_t tests = 0;
 static size_t test_success = 0;
 static size_t test_fail = 0;
 
+static bool success_flag = false;
+static bool fail_flag = false;
 
-// Print the values of a string array to out
+
+// Print the values of a string array to output buffer.
+// `args` must be a NULL-terminated array and,
+// `out` must have enough space for the result.
 static void
 sprint_arr(char** args, char* out) {
     if (args == NULL) {
         snprintf(out, ARR_STR_BUFF_SIZE, "NULL");
+        return;
+    }
+
+    if (args[0] == NULL) {
+        snprintf(out, ARR_STR_BUFF_SIZE, "{}");
         return;
     }
 
@@ -33,41 +44,39 @@ sprint_arr(char** args, char* out) {
 }
 
 
+// Asserts that two strings are equal.
 void
-assert_eq_str(const char* str1, const char* str2, const char* desc, const char* file, int line) {
-    tests++;
-
+assert_eq_str(const char* str1, const char* str2, const char* func, const char* file, int line) {
     if (strcmp(str1, str2) == 0) {
-        test_success++;
+        success_flag = true;
     }
     else {
-        test_fail++;
+        fail_flag = true;
 
         fprintf(stderr, RED "[!] FAIL at %s:%d: %s\n\"%s\" is not \"%s\"!\n" RESET,
-                file, line, desc, str1, str2);
+                file, line, func, str1, str2);
     }
 }
 
 
+// Asserts that two long integers are equal.
 void
-assert_eq_long(long num1, long num2, const char* desc, const char* file, int line) {
-    tests++;
-
+assert_eq_long(long num1, long num2, const char* func, const char* file, int line) {
     if (num1 == num2) {
-        test_success++;
+        success_flag = true;
     }
     else {
-        test_fail++;
+        fail_flag = true;
 
         fprintf(stderr, RED "[!] FAIL at %s:%d: %s\n%ld is not %ld!\n" RESET,
-                file, line, desc, num1, num2);
+                file, line, func, num1, num2);
     }
 }
 
 
+// Asserts that two string arrays are equal.
 void
-assert_eq_str_arr(char** arr1, char** arr2, const char* desc, const char* file, int line) {
-    tests++;
+assert_eq_str_arr(char** arr1, char** arr2, const char* func, const char* file, int line) {
     const char* fail_message = RED "[!] FAIL at %s:%d: %s\n%s is not %s!\n" RESET;
 
     char arr1_str[ARR_STR_BUFF_SIZE];
@@ -77,14 +86,14 @@ assert_eq_str_arr(char** arr1, char** arr2, const char* desc, const char* file, 
 
 
     if (arr1 == NULL && arr2 == NULL) {
-        test_success++;
+        success_flag = true;
         return;
     }
 
     if (arr1 == NULL || arr2 == NULL) {
-        test_fail++;
+        fail_flag = true;
 
-        fprintf(stderr, fail_message, file, line, desc, arr1_str, arr2_str);
+        fprintf(stderr, fail_message, file, line, func, arr1_str, arr2_str);
         return;
     }
 
@@ -92,25 +101,27 @@ assert_eq_str_arr(char** arr1, char** arr2, const char* desc, const char* file, 
     size_t i;
     for (i = 0; arr1[i] && arr2[i]; i++) {
         if (strcmp(arr1[i], arr2[i]) != 0) {
-            test_fail++;
+            fail_flag = true;
 
-            fprintf(stderr, fail_message, file, line, desc, arr1_str, arr2_str);
+            fprintf(stderr, fail_message, file, line, func, arr1_str, arr2_str);
             return;
         }
     }
 
     // the case where one array is shorter than the other
     if (arr1[i] != NULL || arr2[i] != NULL) {
-        fprintf(stderr, fail_message, file, line, desc, arr1_str, arr2_str);
-        test_fail++;
+        fprintf(stderr, fail_message, file, line, func, arr1_str, arr2_str);
+        fail_flag = true;
         return;
     }
 
-    test_success++;
+    success_flag = true;
 }
 
 
-void
+// Prints statistics for all tests that were run.
+// If no tests failed, prints an [OK] message.
+static void
 end(const char* name) {
     printf("Ran %zu %s test(s).\n", tests, name);
     printf("Success: %zu  |  Fail: %zu\n", test_success, test_fail);
@@ -119,3 +130,26 @@ end(const char* name) {
     printf("-------------------------------------------------------\n");
 }
 
+
+typedef void (*test_callback_t)(void);
+
+// Runs each callback and counts it as a test only if it sets a success or failure flag.
+void
+run_tests_impl(const char* name, const test_callback_t funcs[], size_t count) {
+    for (size_t i = 0; i < count; ++i) {
+        success_flag = false;
+        fail_flag    = false;
+
+        funcs[i]();
+        tests++;
+
+        if (fail_flag)
+            test_fail++;
+        else if (success_flag)
+            test_success++;
+        else
+            tests--;
+    }
+
+    end(name);
+}
