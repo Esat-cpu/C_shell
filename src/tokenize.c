@@ -90,6 +90,17 @@ size_t tokenize(const char* input, Token* tokens, size_t max_tokens) {
             continue;
         }
 
+        // Semicolon case
+        if (*ch == ';' && status == NORMAL) {
+            int f = flush_token(buf, len, NORMAL, tokens, iter, type);
+            if (f) { iter++; len = 0; }
+
+            strcpy(buf, ";");
+            flush_token(buf, strlen(buf), NORMAL, tokens, iter, T_SEMI);
+            iter++;
+            continue;
+        }
+
         // Operator cases
         // PIPE
         if (*ch == '|' && status == NORMAL) {
@@ -236,6 +247,7 @@ size_t tokenize(const char* input, Token* tokens, size_t max_tokens) {
             }
         }
 
+        // normal character case
         buf[len++] = *ch;
     }
 

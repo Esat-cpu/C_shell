@@ -19,6 +19,8 @@ typedef enum {
     T_PIPE,
     T_AND,
     T_OR,
+    T_SEMI,
+
     T_REDIR_OUT,
     T_REDIR_OUT_APPEND,
     T_REDIR_ERR_OUT,
