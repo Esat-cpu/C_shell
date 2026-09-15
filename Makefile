@@ -77,20 +77,20 @@ $(TEST_BIN_DIR)/cd_test: $(OBJ_DIR)/$(TEST_DIR)/cd_test.o \
 							$(OBJ_DIR)/$(SRC_DIR)/commands/cd.o \
 							$(OBJ_DIR)/$(SRC_DIR)/shell.o
 	@mkdir -p $(@D)
-	$(CC) $(CPPFLAGS) $(CFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $^ -o $@
 
 
 $(TEST_BIN_DIR)/trim_test: $(OBJ_DIR)/$(TEST_DIR)/trim_test.o \
 							$(OBJ_DIR)/$(SRC_DIR)/trim.o
 	@mkdir -p $(@D)
-	$(CC) $(CPPFLAGS) $(CFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $^ -o $@
 
 
 $(TEST_BIN_DIR)/tokenize_test: $(OBJ_DIR)/$(TEST_DIR)/tokenize_test.o \
 								$(OBJ_DIR)/$(SRC_DIR)/tokenize.o \
 								$(OBJ_DIR)/$(TEST_LIB)/test_lib.o
 	@mkdir -p $(@D)
-	$(CC) $(CPPFLAGS) $(CFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $^ -o $@
 
 
 $(TEST_BIN_DIR)/expansion_test: $(OBJ_DIR)/$(TEST_DIR)/expansion_test.o \
@@ -99,20 +99,34 @@ $(TEST_BIN_DIR)/expansion_test: $(OBJ_DIR)/$(TEST_DIR)/expansion_test.o \
 								$(OBJ_DIR)/$(SRC_DIR)/tokenize.o \
 								$(OBJ_DIR)/$(SRC_DIR)/shell.o
 	@mkdir -p $(@D)
-	$(CC) $(CPPFLAGS) $(CFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $^ -o $@
+
+
+$(TEST_BIN_DIR)/parser_test: $(OBJ_DIR)/$(TEST_DIR)/parser_test.o \
+								$(OBJ_DIR)/$(TEST_LIB)/test_lib.o \
+								$(OBJ_DIR)/$(SRC_DIR)/parser.o \
+								$(OBJ_DIR)/$(SRC_DIR)/ast.o \
+								$(OBJ_DIR)/$(SRC_DIR)/tokenize.o
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) $^ -o $@
 
 
 test: $(TEST_BIN_DIR)/cd_test \
 		$(TEST_BIN_DIR)/trim_test \
 		$(TEST_BIN_DIR)/tokenize_test \
-		$(TEST_BIN_DIR)/expansion_test
+		$(TEST_BIN_DIR)/expansion_test \
+		$(TEST_BIN_DIR)/parser_test
 	$(foreach bin,$^,./$(bin);)
+
+
+test-asan: CFLAGS += -fsanitize=address
+test-asan: test
 
 
 # Clean build
 clean:
 	rm -r $(BUILD_DIR)
 
-.PHONY: all clean test
+.PHONY: all clean test test-asan
 
 -include $(DEPS)

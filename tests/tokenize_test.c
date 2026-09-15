@@ -269,7 +269,7 @@ main() {
         test_token_with_AND_operator,
         test_token_with_OR_operator,
         test_token_with_pipe_operator,
-        test_token_with_redirection_operators
+        test_token_with_redirection_operators,
     );
     return 0;
 }
