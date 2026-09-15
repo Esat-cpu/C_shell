@@ -273,11 +273,33 @@ test_parse_error_message() {
         "; echo helo",
         "Parse error near ';'.",
     };
+    ErrorCase c2 = {
+        "echo helo >",
+        "Parse error near '>'.",
+    };
+    ErrorCase c3 = {
+        "echo && | cat",
+        "Parse error near '&&'.",
+    };
 
     char* err = NULL;
-    command_to_parsed_str(c1.command, out, &err);
 
+    command_to_parsed_str(c1.command, out, &err);
     ASSERT_EQ (err, c1.expected_message);
+
+    free(err);
+    free_ast(root);
+    free_tokens(tokens);
+
+    command_to_parsed_str(c2.command, out, &err);
+    ASSERT_EQ (err, c2.expected_message);
+
+    free(err);
+    free_ast(root);
+    free_tokens(tokens);
+
+    command_to_parsed_str(c3.command, out, &err);
+    ASSERT_EQ (err, c3.expected_message);
 
     free(err);
     free_ast(root);
