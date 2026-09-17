@@ -74,7 +74,7 @@ $(OBJ_DIR)/$(TEST_DIR)/%.o: $(TEST_DIR)/%.c
 
 
 $(TEST_BIN_DIR)/cd_test: $(OBJ_DIR)/$(TEST_DIR)/cd_test.o \
-							$(OBJ_DIR)/$(SRC_DIR)/commands/cd.o \
+							$(OBJ_DIR)/$(SRC_DIR)/builtins/cd.o \
 							$(OBJ_DIR)/$(SRC_DIR)/shell.o
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) $^ -o $@

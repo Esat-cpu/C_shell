@@ -4,7 +4,7 @@
 #include <string.h>
 #include <limits.h>
 
-#include "commands/cd.h"
+#include "builtins/cd.h"
 #include "shell.h"
 
 

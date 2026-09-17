@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "commands/exit_builtin.h"
+#include "builtins/exit_builtin.h"
 #include "shell.h"
 
 

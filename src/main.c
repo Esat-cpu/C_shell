@@ -11,8 +11,8 @@
 #include <readline/history.h>
 #include <sys/wait.h>
 
-#include "commands/cd.h"
-#include "commands/exit_builtin.h"
+#include "builtins/cd.h"
+#include "builtins/exit_builtin.h"
 #include "prompt_build.h"
 #include "trim.h"
 #include "tokenize.h"

@@ -8,7 +8,7 @@
 #include <string.h>
 #include <fcntl.h>
 
-#include "commands/cd.h"
+#include "builtins/cd.h"
 #include "shell.h"
 
 #ifndef PATH_MAX
