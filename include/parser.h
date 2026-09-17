@@ -13,7 +13,7 @@ typedef struct {
 } Parser;
 
 
-Node* parse(Token* tokens, size_t token_count, char **error_message);
+Node* parse(Token* tokens, size_t token_count, char **error_out);
 
 Node* parse_sequence(Parser* p);
 

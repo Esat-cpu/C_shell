@@ -71,7 +71,7 @@ char* collect_redirection(Token* tokens, size_t *pos, size_t end, Node* node) {
 Node* make_cmd_node(Token* tokens,
                     size_t start,
                     size_t end,
-                    char** error_message) {
+                    char** error_out) {
     size_t count = end - start;
 
     Node* node = malloc(sizeof(Node));
@@ -89,7 +89,7 @@ Node* make_cmd_node(Token* tokens,
         else {
             char* e = collect_redirection(tokens, &i, end, node);
             if (e) {
-                *error_message = e;
+                *error_out = e;
                 free_ast(node);
                 return NULL;
             }
@@ -99,16 +99,15 @@ Node* make_cmd_node(Token* tokens,
     node->cmd.argv[ind] = NULL;
 
     if (ind == 0) {
-        char* buf = malloc(64);
+        *error_out = malloc(64);
 
         if (i > 0)
-            snprintf(buf, 64, "Parse error near '%s'.", tokens[i-1].value);
+            snprintf(*error_out, 64, "Parse error near '%s'.", tokens[i-1].value);
         else if (tokens[i].value != NULL)
-            snprintf(buf, 64, "Parse error near '%s'.", tokens[i].value);
+            snprintf(*error_out, 64, "Parse error near '%s'.", tokens[i].value);
         else
-            snprintf(buf, 64, "Parse error near newline.");
+            snprintf(*error_out, 64, "Parse error near newline.");
 
-        *error_message = buf;
         free_ast(node);
         return NULL;
     }

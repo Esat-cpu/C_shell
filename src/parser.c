@@ -126,7 +126,7 @@ Node* parse_sequence(Parser* p) {
 // returns the root node and leaves *error_message untouched (NULL).
 // On a parse error, returns NULL and writes a heap-allocated message
 // to *error_message -- the caller is responsible for freeing it.
-Node* parse(Token* tokens, size_t token_count, char **error_message) {
+Node* parse(Token* tokens, size_t token_count, char **error_out) {
     Parser p = {
         .tokens = tokens,
         .pos = 0,
@@ -135,7 +135,7 @@ Node* parse(Token* tokens, size_t token_count, char **error_message) {
     };
 
     Node* root = parse_sequence(&p);
-    *error_message = p.error_message;
+    *error_out = p.error_message;
 
     return root;
 }

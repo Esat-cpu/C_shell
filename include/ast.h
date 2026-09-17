@@ -40,7 +40,7 @@ typedef struct Node {
 char* collect_redirection(Token* tokens, size_t *pos, size_t end, Node* node);
 
 Node* make_cmd_node(
-        Token* tokens, size_t start, size_t end, char** error_message);
+        Token* tokens, size_t start, size_t end, char** error_out);
 
 Node* make_operator_node(Token token);
 
