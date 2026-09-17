@@ -52,9 +52,11 @@ static void sigint_handler(int sig) {
 }
 
 
-int main() {
+int main(int argc, char** argv) {
+    (void)argc;
     atexit(clean_exit);
     signal(SIGINT, sigint_handler);
+    shell.shell_name = argv[0];
 
     // Assign the executable location to the SHELL environment variable
     char *shell_path = malloc(PATH_MAX);

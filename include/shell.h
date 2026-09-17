@@ -6,6 +6,7 @@
 
 
 struct ShellState {
+    const char* shell_name;
     volatile sig_atomic_t exit_code;
     char cwd[PATH_MAX];
     char oldpwd[PATH_MAX];
