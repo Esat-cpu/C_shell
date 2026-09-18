@@ -110,7 +110,7 @@ int main(int argc, char** argv) {
 
         // trimming spaces at the start and end of the command
         trim(command);
-        if (!*command) continue;
+        if (!command[0] || command[0] == '#') continue;
         else add_history(command);
 
         char *error_message = NULL;

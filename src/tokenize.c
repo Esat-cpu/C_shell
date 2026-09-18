@@ -203,6 +203,11 @@ size_t tokenize(const char* input, Token* tokens, size_t max_tokens) {
             }
         }
 
+        // comment case
+        if (*ch == '#' && space) {
+            tokens[iter].value = NULL;
+            return iter;
+        }
 
         // space case in normal mode
         if (*ch == ' ' && status == NORMAL) {
