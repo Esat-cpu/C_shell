@@ -14,6 +14,8 @@ void append_to_redir_list(RedirList **list,
     RedirList* node = malloc(sizeof(RedirList));
     node->redir_type = redir_type;
     node->filename = filename;
+    node->savedfd = 0;
+    node->targetfd = 0;
     node->next = NULL;
 
     // Add to tail
@@ -58,7 +60,7 @@ char* collect_redirection(Token* tokens, size_t *pos, size_t end, Node* node) {
     else {
         char* error_message = malloc(64);
         snprintf(error_message, 64,
-                "Parse error near '%s'.", tokens[*pos].value);
+                "Parse error near '%s'", tokens[*pos].value);
         return error_message;
     }
 }
@@ -102,11 +104,11 @@ Node* make_cmd_node(Token* tokens,
         *error_out = malloc(64);
 
         if (i > 0)
-            snprintf(*error_out, 64, "Parse error near '%s'.", tokens[i-1].value);
+            snprintf(*error_out, 64, "Parse error near '%s'", tokens[i-1].value);
         else if (tokens[i].value != NULL)
-            snprintf(*error_out, 64, "Parse error near '%s'.", tokens[i].value);
+            snprintf(*error_out, 64, "Parse error near '%s'", tokens[i].value);
         else
-            snprintf(*error_out, 64, "Parse error near newline.");
+            snprintf(*error_out, 64, "Parse error near newline");
 
         free_ast(node);
         return NULL;

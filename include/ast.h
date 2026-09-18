@@ -8,6 +8,8 @@
 typedef struct RedirList {
     TokenType redir_type;
     char* filename;
+    int savedfd;
+    int targetfd;
 
     struct RedirList* next;
 } RedirList;
