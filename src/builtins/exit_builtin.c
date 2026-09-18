@@ -5,7 +5,7 @@
 #include "shell.h"
 
 
-void exit_builtin(char** args) {
+int exit_builtin(char** args) {
     if (args[1] != NULL) {
         char *endptr;
         long val = strtol(args[1], &endptr, 10);
@@ -20,9 +20,8 @@ void exit_builtin(char** args) {
         }
 
         if (args[2] != NULL) {
-            shell.exit_code = 1;
             fprintf(stderr, "exit: Too many arguments.\n");
-            return;
+            return EXIT_FAILURE;
         }
     }
     exit(shell.exit_code);
