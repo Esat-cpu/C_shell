@@ -26,7 +26,7 @@ static bool is_command_terminator(Token token) {
 }
 
 
-Node* parse_command(Parser* p) {
+static Node* parse_command(Parser* p) {
     size_t start = p->pos;
 
     while (p->pos < p->end && !is_command_terminator(p->tokens[p->pos]))
@@ -40,7 +40,7 @@ Node* parse_command(Parser* p) {
 }
 
 
-Node* parse_pipe(Parser* p) {
+static Node* parse_pipe(Parser* p) {
     Node* left = parse_command(p);
     if (!left) return NULL;
 
@@ -65,7 +65,7 @@ Node* parse_pipe(Parser* p) {
 }
 
 
-Node* parse_logical(Parser* p) {
+static Node* parse_logical(Parser* p) {
     Node* left = parse_pipe(p);
     if (!left) return NULL;
 
@@ -93,7 +93,7 @@ Node* parse_logical(Parser* p) {
 
 // A trailing ';' is valid. In that case, the operator node's
 // right arm will be NULL.
-Node* parse_sequence(Parser* p) {
+static Node* parse_sequence(Parser* p) {
     Node* left = parse_logical(p);
     if (!left) return NULL;
 
@@ -126,6 +126,7 @@ Node* parse_sequence(Parser* p) {
 // returns the root node and leaves *error_message untouched (NULL).
 // On a parse error, returns NULL and writes a heap-allocated message
 // to *error_message -- the caller is responsible for freeing it.
+// 'tokens' array must have at least one token.
 Node* parse(Token* tokens, size_t token_count, char **error_out) {
     Parser p = {
         .tokens = tokens,

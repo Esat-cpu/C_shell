@@ -15,12 +15,4 @@ typedef struct {
 
 Node* parse(Token* tokens, size_t token_count, char **error_out);
 
-Node* parse_sequence(Parser* p);
-
-Node* parse_logical(Parser* p);
-
-Node* parse_pipe(Parser* p);
-
-Node* parse_command(Parser* p);
-
 #endif
