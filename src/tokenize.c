@@ -47,7 +47,7 @@ size_t tokenize(const char* input, Token* tokens, size_t max_tokens) {
     QuoteType status = NORMAL;
     TokenType type = T_WORD;
     bool escape = false;
-    bool space = false;
+    bool space = true;
 
     size_t iter = 0; // for tokens
 
