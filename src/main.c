@@ -21,6 +21,7 @@
 static const char* HIS_FILE = ".she_history";
 
 static char* command = NULL;
+static volatile sig_atomic_t in_readline = false;
 
 
 static void clean_exit(void) {
@@ -48,11 +49,18 @@ static void set_shell_name(const char *argv0) {
 // Clear input and go to the next line
 static void sigint_handler(int sig) {
     (void)sig;  // suppress unused warning
-    write(STDOUT_FILENO, "\n", 1);
-    rl_replace_line("", 0);
-    rl_on_new_line();
-    rl_redisplay();
     shell.exit_code = 130;
+    write(STDOUT_FILENO, "\n", 1);
+
+    char prompt[PATH_MAX];
+    prompt_build(prompt, PATH_MAX);
+
+    if (in_readline) {
+        rl_replace_line("", 0);
+        rl_on_new_line();
+        rl_set_prompt(prompt);
+        rl_redisplay();
+    }
 }
 
 
@@ -104,7 +112,10 @@ int main(int argc, char** argv) {
             prompt_build(prompt, PATH_MAX);
 
             free(command);
+
+            in_readline = 1;
             command = readline(prompt);
+            in_readline = 0;
 
             if (!command)
                 exit(shell.exit_code);
@@ -126,8 +137,8 @@ int main(int argc, char** argv) {
         if (!command[0] || command[0] == '#') continue;
 
         add_history(command);
-        char *error_message = NULL;
 
+        char *error_message = NULL;
         ExeResult e = execute_line(command, &error_message);
 
         if (e) {
