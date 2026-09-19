@@ -36,6 +36,13 @@ void clean_exit(void) {
 }
 
 
+// Set shell's name from argv[0]
+static void set_shell_name(const char *argv0) {
+    const char *s = strrchr(argv0, '/');
+    shell.name = s ? (s + 1) : argv0;
+}
+
+
 // clear input and go to the next line
 static void sigint_handler(int sig) {
     (void)sig;  // suppress unused warning
@@ -49,10 +56,9 @@ static void sigint_handler(int sig) {
 
 int main(int argc, char** argv) {
     (void)argc;
-    (void)argv;
     atexit(clean_exit);
     signal(SIGINT, sigint_handler);
-    shell.name = argv[0];
+    set_shell_name(argv[0]);
 
     if (isatty(STDIN_FILENO))
         shell.interactive = true;
