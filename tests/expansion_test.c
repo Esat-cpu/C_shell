@@ -208,5 +208,4 @@ main() {
         test_param_expansion_dollar_sign_as_literal,
         test_param_expansion_undeclared_var,
     );
-    return 0;
 }

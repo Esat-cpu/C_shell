@@ -271,15 +271,15 @@ static void
 test_parse_error_message() {
     ErrorCase c1 = {
         "; echo helo",
-        "Parse error near ';'.",
+        "Parse error near ';'",
     };
     ErrorCase c2 = {
         "echo helo >",
-        "Parse error near '>'.",
+        "Parse error near '>'",
     };
     ErrorCase c3 = {
         "echo && | cat",
-        "Parse error near '&&'.",
+        "Parse error near '&&'",
     };
 
     char* err = NULL;
@@ -319,5 +319,4 @@ main() {
         test_parse_mix,
         test_parse_error_message,
     );
-    return 0;
 }

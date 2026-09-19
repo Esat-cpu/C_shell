@@ -19,7 +19,7 @@ void assert_eq_str_arr(char** arr1, char** arr2,
 
 typedef void (*test_callback_t)(void);
 
-void run_tests_impl(
+int run_tests_impl(
     const char* name,
     const test_callback_t funcs[],
     size_t count
@@ -38,10 +38,11 @@ void run_tests_impl(
 )(X, Y, __func__, __FILE__, __LINE__)
 
 
+// NOTE: this macro returns from the calling function
 #define RUN_TESTS(name, ...)                       \
     do {                                           \
         test_callback_t funcs[] = { __VA_ARGS__ }; \
-        run_tests_impl(                            \
+        return run_tests_impl(                     \
             name,                                  \
             funcs,                                 \
             sizeof funcs / sizeof(test_callback_t) \

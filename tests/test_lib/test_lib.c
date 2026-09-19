@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
 
@@ -134,7 +135,7 @@ end(const char* name) {
 typedef void (*test_callback_t)(void);
 
 // Runs each callback and counts it as a test only if it sets a success or failure flag.
-void
+int
 run_tests_impl(const char* name, const test_callback_t funcs[], size_t count) {
     for (size_t i = 0; i < count; ++i) {
         success_flag = false;
@@ -152,4 +153,7 @@ run_tests_impl(const char* name, const test_callback_t funcs[], size_t count) {
     }
 
     end(name);
+
+    if (fail_flag)  return EXIT_FAILURE;
+    else            return EXIT_SUCCESS;
 }
