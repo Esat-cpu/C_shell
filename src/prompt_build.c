@@ -6,14 +6,13 @@
 #include "shell.h"
 
 
-void prompt_build(char* prompt, size_t prompt_size,
-                    const char* home, const char* user) {
+void prompt_build(char* prompt, size_t prompt_size) {
     // The path that will appear in the prompt
     char prmpt_cwd[PATH_MAX];
 
     // '~' contraction for prompt
-    if (home && strncmp(shell.cwd, home, strlen(home)) == 0)
-        snprintf(prmpt_cwd, PATH_MAX, "~%s", shell.cwd + strlen(home));
+    if (shell.home && strncmp(shell.cwd, shell.home, strlen(shell.home)) == 0)
+        snprintf(prmpt_cwd, PATH_MAX, "~%s", shell.cwd + strlen(shell.home));
     else
         strcpy(prmpt_cwd, shell.cwd);
 
@@ -21,15 +20,15 @@ void prompt_build(char* prompt, size_t prompt_size,
     if (shell.exit_code == 0)
         snprintf(prompt, prompt_size,
                 "\033[1;32m%s \033[1;34m%s\033[0m> ",
-                user, prmpt_cwd);
+                shell.user, prmpt_cwd);
 
     else if (shell.exit_code == 130)
         snprintf(prompt, prompt_size,
                 "\033[1;32m%s \033[1;34m%s \033[1;31m[%s]\033[0m> ",
-                user, prmpt_cwd, "SIGINT");
+                shell.user, prmpt_cwd, "SIGINT");
 
     else
         snprintf(prompt, prompt_size,
                 "\033[1;32m%s \033[1;34m%s \033[1;31m[%d]\033[0m> ",
-                user, prmpt_cwd, shell.exit_code);
+                shell.user, prmpt_cwd, shell.exit_code);
 }

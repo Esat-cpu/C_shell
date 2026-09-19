@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <signal.h>
 #include <stdbool.h>
+#include <pwd.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
@@ -14,22 +15,23 @@
 #include "executor.h"
 #include "shell.h"
 
-#define MAX_ARGS 64
-
 
 // History file, set to NULL if saving history file is not required.
-static const char* HIS_FILE = ".shell_history";
+// It will be written to and read from the user's home directory.
+static const char* HIS_FILE = ".she_history";
 
 static char* command = NULL;
 
 
-void clean_exit(void) {
-    if (command) free(command);
-    if (isatty(STDIN_FILENO)) {
+static void clean_exit(void) {
+    free(command);
+
+    if (shell.interactive) {
         char history_file[PATH_MAX];
-        char* home = getenv("HOME");
-        if (home && HIS_FILE) {
-            snprintf(history_file, sizeof(history_file), "%s/%s", home, HIS_FILE);
+
+        if (shell.home && HIS_FILE) {
+            snprintf(history_file, sizeof(history_file),
+                    "%s/%s", shell.home, HIS_FILE);
             write_history(history_file);
         }
     }
@@ -43,7 +45,7 @@ static void set_shell_name(const char *argv0) {
 }
 
 
-// clear input and go to the next line
+// Clear input and go to the next line
 static void sigint_handler(int sig) {
     (void)sig;  // suppress unused warning
     write(STDOUT_FILENO, "\n", 1);
@@ -54,60 +56,58 @@ static void sigint_handler(int sig) {
 }
 
 
-int main(int argc, char** argv) {
-    (void)argc;
+// This will be executed on shell's startup
+static void setup(char** argv) {
     atexit(clean_exit);
-    signal(SIGINT, sigint_handler);
     set_shell_name(argv[0]);
 
-    if (isatty(STDIN_FILENO))
+    struct passwd* pw = getpwuid(getuid());
+
+    shell.home = pw->pw_dir;
+    shell.user = pw->pw_name;
+
+    if (isatty(STDIN_FILENO)) {
         shell.interactive = true;
+        signal(SIGINT, sigint_handler);
+    }
     else
         shell.interactive = false;
 
-    // Assign the executable location to the SHELL environment variable
-    char *shell_path = malloc(PATH_MAX);
-    ssize_t leng;
-    if (shell_path != NULL) {
-        leng = readlink("/proc/self/exe", shell_path, PATH_MAX - 1);
-        if (leng != -1) {
-            shell_path[leng] = '\0';
-            setenv("SHELL", shell_path, 1);
-        }
-    }
-    free(shell_path);
-
-    // Get the current directory
-    if (getcwd(shell.cwd, sizeof shell.cwd) == NULL) {
+    // Set working directories
+    if (getcwd(shell.cwd, sizeof(shell.cwd)) == NULL) {
         perror("getcwd");
         exit(errno);
     }
     strcpy(shell.oldpwd, shell.cwd);
 
-
-    // Get the home directory and user name
-    char* home = getenv("HOME");
-    char* user = getenv("USER");
-    if (user == NULL) user = "shell";
-
-    if (home && HIS_FILE) {
+    // Read history from HIS_FILE
+    if (shell.home && HIS_FILE) {
         char history_file[PATH_MAX];
-        snprintf(history_file, sizeof history_file, "%s/%s", home, HIS_FILE);
+        snprintf(history_file, sizeof(history_file),
+                "%s/%s", shell.home, HIS_FILE);
         read_history(history_file);
     }
+
+    setenv("HOME", shell.home, 0);
+    setenv("USER", shell.user, 0);
+    setenv("SHELL", pw->pw_shell, 0);
+}
+
+
+int main(int argc, char** argv) {
+    (void)argc;
+    setup(argv);
 
     while (1) {
         if (shell.interactive) {
             char prompt[PATH_MAX];
-            prompt_build(prompt, PATH_MAX, home, user);
+            prompt_build(prompt, PATH_MAX);
 
-
-            if (command) free(command);
+            free(command);
             command = readline(prompt);
 
-            if (!command) {
+            if (!command)
                 exit(shell.exit_code);
-            }
         }
         else {
             size_t size = 0;
@@ -121,12 +121,11 @@ int main(int argc, char** argv) {
             }
         }
 
-
         // trimming spaces at the start and end of the command
         trim(command);
         if (!command[0] || command[0] == '#') continue;
-        else add_history(command);
 
+        add_history(command);
         char *error_message = NULL;
 
         ExeResult e = execute_line(command, &error_message);
@@ -139,4 +138,3 @@ int main(int argc, char** argv) {
 
     return 0;
 }
-
