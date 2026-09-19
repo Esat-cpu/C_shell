@@ -9,6 +9,7 @@
 #include <sys/wait.h>
 
 #include "executor.h"
+#include "trim.h"
 #include "tokenize.h"
 #include "ast.h"
 #include "parser.h"
@@ -350,6 +351,10 @@ ExeResult execute_file(const char* filename) {
     char* error_message = NULL;
 
     while (fgets(line, MAX_LINE_SIZE, file)) {
+        // trimming spaces at the start and end of the line
+        trim(line);
+        if (!line[0] || line[0] == '#') continue;
+
         ExeResult ex = execute_line(line, &error_message);
 
         if (ex == E_PARSE_ERROR) {
