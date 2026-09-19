@@ -5,6 +5,7 @@
 #include <limits.h>
 #include <errno.h>
 #include <signal.h>
+#include <stdbool.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
@@ -48,9 +49,15 @@ static void sigint_handler(int sig) {
 
 int main(int argc, char** argv) {
     (void)argc;
+    (void)argv;
     atexit(clean_exit);
     signal(SIGINT, sigint_handler);
-    shell.shell_name = argv[0];
+    shell.name = argv[0];
+
+    if (isatty(STDIN_FILENO))
+        shell.interactive = true;
+    else
+        shell.interactive = false;
 
     // Assign the executable location to the SHELL environment variable
     char *shell_path = malloc(PATH_MAX);
@@ -84,7 +91,7 @@ int main(int argc, char** argv) {
     }
 
     while (1) {
-        if (isatty(STDIN_FILENO)) {
+        if (shell.interactive) {
             char prompt[PATH_MAX];
             prompt_build(prompt, PATH_MAX, home, user);
 
@@ -101,7 +108,8 @@ int main(int argc, char** argv) {
             ssize_t len = getline(&command, &size, stdin);
 
             if (len == -1) {
-                if (errno == ENOTTY) break;
+                if (feof(stdin)) break;
+
                 perror("getline");
                 exit(EXIT_FAILURE);
             }
@@ -118,7 +126,7 @@ int main(int argc, char** argv) {
         ExeResult e = execute_line(command, &error_message);
 
         if (e) {
-            fprintf(stderr, "%s: %s\n", shell.shell_name, error_message);
+            fprintf(stderr, "%s: %s\n", shell.name, error_message);
             free(error_message);
         }
     }

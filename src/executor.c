@@ -46,7 +46,7 @@ static ExeResult apply_redirections(RedirList* r) {
         int fd = open(r->filename, flags, 0644);
         if (fd == -1) {
             fprintf(stderr, "%s: %s: %s\n",
-                    shell.shell_name, r->filename, strerror(errno));
+                    shell.name, r->filename, strerror(errno));
             return E_FILE_ERROR;
         }
 
@@ -98,12 +98,12 @@ static int execute_cmd_node_for_pipe(Node* node) {
 
     if (errno == EACCES) {
         fprintf(stderr, "%s: %s: %s\n",
-                shell.shell_name, node->cmd.argv[0], strerror(errno));
+                shell.name, node->cmd.argv[0], strerror(errno));
         return 126;
     }
     else {
         fprintf(stderr, "%s: %s: Command not found...\n",
-                        shell.shell_name, node->cmd.argv[0]);
+                        shell.name, node->cmd.argv[0]);
         return 127;
     }
 }
@@ -135,12 +135,12 @@ static void execute_cmd_node(Node* node) {
 
         if (errno == EACCES) {
             fprintf(stderr, "%s: %s: %s\n",
-                    shell.shell_name, node->cmd.argv[0], strerror(errno));
+                    shell.name, node->cmd.argv[0], strerror(errno));
             _exit(126);
         }
         else {
             fprintf(stderr, "%s: %s: Command not found...\n",
-                            shell.shell_name, node->cmd.argv[0]);
+                            shell.name, node->cmd.argv[0]);
             _exit(127);
         }
     }
@@ -152,7 +152,7 @@ static void execute_cmd_node(Node* node) {
     }
 
     else {
-        fprintf(stderr, "%s: fork: %s\n", shell.shell_name, strerror(errno));
+        fprintf(stderr, "%s: fork: %s\n", shell.name, strerror(errno));
     }
 
     restore_redirections(node->cmd.redir_list);
@@ -198,7 +198,7 @@ static int pipe_traversal(Node* node,
 
             else {
                 fprintf(stderr, "%s: fork: %s\n",
-                        shell.shell_name, strerror(errno));
+                        shell.name, strerror(errno));
                 return EXIT_FAILURE;
             }
         }
@@ -228,7 +228,7 @@ static void pipe_handle(Node* node) {
         if (p == -1) {
             shell.exit_code = EXIT_FAILURE;
             fprintf(stderr, "%s: pipe: %s\n",
-                    shell.shell_name, strerror(errno));
+                    shell.name, strerror(errno));
             return;
         }
     }
@@ -342,7 +342,7 @@ ExeResult execute_file(const char* filename) {
 
     if (file == NULL) {
         fprintf(stderr, "%s: %s: %s\n",
-                        shell.shell_name, filename, strerror(errno));
+                        shell.name, filename, strerror(errno));
         return E_FILE_ERROR;
     }
 
