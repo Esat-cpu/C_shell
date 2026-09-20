@@ -11,6 +11,7 @@
 #include <readline/history.h>
 
 #include "prompt_build.h"
+#include "argument_parser.h"
 #include "util.h"
 #include "executor.h"
 #include "shell.h"
@@ -19,6 +20,9 @@
 // History file, set to NULL if saving history file is not required.
 // It will be written to and read from the user's home directory.
 static const char* HIS_FILE = ".she_history";
+// The file that will be executed on startup after setup and parse_arguments
+// functions if --no-profile flag is not set.
+static const char* RC_FILE = ".sherc";
 
 static char* command = NULL;
 static volatile sig_atomic_t in_readline = false;
@@ -89,7 +93,7 @@ static void setup(char** argv) {
     strcpy(shell.oldpwd, shell.cwd);
 
     // Read history from HIS_FILE
-    if (shell.home && HIS_FILE) {
+    if (shell.interactive && shell.home && HIS_FILE) {
         char history_file[PATH_MAX];
         snprintf(history_file, sizeof(history_file),
                 "%s/%s", shell.home, HIS_FILE);
@@ -103,8 +107,38 @@ static void setup(char** argv) {
 
 
 int main(int argc, char** argv) {
-    (void)argc;
     setup(argv);
+    parse_arguments(argc, argv);
+
+    // Execute startup file if it exists
+    if (RC_FILE && shell.interactive && shell.home && !args.no_profile) {
+        char rc_path[PATH_MAX];
+        snprintf(rc_path, sizeof(rc_path), "%s/%s", shell.home, RC_FILE);
+
+        if (access(rc_path, F_OK) == 0) {
+            execute_file(rc_path);
+        }
+    }
+
+    // Execute the command that is given as an argument
+    if (args.command) {
+        char *error_message = NULL;
+        ExeResult e = execute_line(args.command, &error_message);
+
+        if (e) {
+            print_err(error_message, NULL);
+            free(error_message);
+        }
+    }
+
+    // Execute the script file that is given as an argument
+    if (args.script)
+        execute_file(args.script);
+
+    // This condition determined by argument parser according to arguments
+    if (args.should_exit)
+        exit(shell.exit_code);
+
 
     while (1) {
         if (shell.interactive) {
@@ -119,6 +153,8 @@ int main(int argc, char** argv) {
 
             if (!command)
                 exit(shell.exit_code);
+
+            add_history(command);
         }
         else {
             size_t size = 0;
@@ -131,8 +167,6 @@ int main(int argc, char** argv) {
                 exit(EXIT_FAILURE);
             }
         }
-
-        add_history(command);
 
         char *error_message = NULL;
         ExeResult e = execute_line(command, &error_message);
