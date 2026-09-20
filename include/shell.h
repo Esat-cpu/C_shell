@@ -17,6 +17,11 @@ struct ShellState {
     char cwd[PATH_MAX];
     char oldpwd[PATH_MAX];
 
+    // Arguments for context
+    /* When executing a script, set them according to script's arguments. */
+    int argc;
+    char** argv;
+
     // User info
     const char* home;
     const char* user;

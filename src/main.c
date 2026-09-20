@@ -69,9 +69,11 @@ static void sigint_handler(int sig) {
 
 
 // This will be executed on shell's startup
-static void setup(char** argv) {
+static void setup(int argc, char** argv) {
     atexit(clean_exit);
     set_shell_name(argv[0]);
+    shell.argc = argc;
+    shell.argv = argv;
 
     struct passwd* pw = getpwuid(getuid());
 
@@ -107,7 +109,7 @@ static void setup(char** argv) {
 
 
 int main(int argc, char** argv) {
-    setup(argv);
+    setup(argc, argv);
     parse_arguments(argc, argv);
 
     // Execute startup file if it exists
@@ -132,8 +134,15 @@ int main(int argc, char** argv) {
     }
 
     // Execute the script file that is given as an argument
-    if (args.script)
+    if (args.script) {
+        shell.argv += args.script_index;
+        shell.argc -= args.script_index;
+
         execute_file(args.script);
+
+        shell.argv = argv;
+        shell.argc = argc;
+    }
 
     // This condition determined by argument parser according to arguments
     if (args.should_exit)

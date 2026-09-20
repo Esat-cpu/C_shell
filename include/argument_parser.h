@@ -9,6 +9,7 @@ struct ArgFlags {
     bool should_exit;
     char* command;
     const char* script;
+    int script_index;
 };
 
 extern struct ArgFlags args;

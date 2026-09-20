@@ -54,8 +54,16 @@ static void expand_param_in_token(Token* token) {
 
 
             else if (isdigit((unsigned char) *start)) {
-                while (isdigit((unsigned char) *end)) {
-                    end++;
+                int ind = strtol(start, &end, 10);
+
+                if (ind < shell.argc) {
+                    ensure_capacity(
+                            &str, &str_size, len, strlen(shell.argv[ind]));
+
+                    for (size_t j = 0; shell.argv[ind][j]; ++j) {
+                        str[len++] = shell.argv[ind][j];
+                    }
+
                 }
 
                 i = (int)(end - token->value);

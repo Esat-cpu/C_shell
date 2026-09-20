@@ -13,12 +13,13 @@ struct ArgFlags args = {
     .should_exit = false,
     .command = NULL,
     .script = NULL,
+    .script_index = 0,
 };
 
 
 static void print_usage(FILE* out_stream) {
     fprintf(out_stream,
-            "Usage: %s [OPTIONS] [SCRIPT FILE]\n", shell.name);
+            "Usage: %s [OPTIONS] [SCRIPT FILE [ARG1,ARG2,...]]\n", shell.name);
 
     fprintf(out_stream, "Options:\n"
             "\t-h, --help       Show this helper message\n"
@@ -77,6 +78,7 @@ void parse_arguments(int argc, char **argv) {
 
     if (optind < argc) {
         args.script = argv[optind];
+        args.script_index = optind;
         args.should_exit = true;
     }
 }

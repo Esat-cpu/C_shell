@@ -21,6 +21,11 @@ char* arr[MAX_ARGS];
 static void
 set_up() {
     setenv("TEST_ENV_VAR", "test", 1);
+
+    static char* argv[3] = {"shell", "test", NULL};
+
+    shell.argc = 2;
+    shell.argv = argv;
 }
 
 
@@ -137,11 +142,12 @@ test_param_expansion_exit_code() {
 }
 
 
+/* Take positional arguments from shell.argv */
 static void
 test_param_expansion_digits() {
     TestCase c = {
-        "echo $1 foo$42bar",
-        {"echo", "", "foobar", NULL},
+        "echo $1 $2 foo$42bar",
+        {"echo", "test", "", "foobar", NULL},
     };
 
     tokenize(c.command, args, MAX_ARGS);
