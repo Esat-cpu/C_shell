@@ -1,0 +1,82 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdbool.h>
+#include <string.h>
+
+#include "argument_parser.h"
+#include "shell.h"
+
+
+struct ArgFlags args = {
+    .no_profile = false,
+    .should_exit = false,
+    .command = NULL,
+    .script = NULL,
+};
+
+
+static void print_usage(FILE* out_stream) {
+    fprintf(out_stream,
+            "Usage: %s [OPTIONS] [SCRIPT FILE]\n", shell.name);
+
+    fprintf(out_stream, "Options:\n"
+            "\t-h, --help       Show this helper message\n"
+            "\t-v, --version    Show version info\n"
+            "\t-c <COMMAND>     Execute the given command line\n"
+            "\t--no-profile     Do not execute the startup file\n"
+    );
+}
+
+
+static void print_version() {
+    printf("%s v%s\n", shell.name, SHE_VERSION);
+}
+
+
+void parse_arguments(int argc, char **argv) {
+    if (argc <= 1) return;
+    int opt;
+
+    for (int i = 1; i < argc; ++i) {
+        if (strcmp(argv[i], "--help") == 0) {
+            strcpy(argv[i], "-h");
+        }
+        else if (strcmp(argv[i], "--version") == 0) {
+            strcpy(argv[i], "-v");
+        }
+        else if (strcmp(argv[i], "--no-profile") == 0) {
+            strcpy(argv[i], "-n");
+        }
+    }
+
+    while ((opt = getopt(argc, argv, "hvc:n")) != -1) {
+        switch (opt) {
+            case 'h':
+                print_usage(stdout);
+                args.should_exit = true;
+                return;
+            case 'v':
+                print_version();
+                args.should_exit = true;
+                return;
+            case 'c':
+                args.command = optarg;
+                args.should_exit = true;
+                return;
+            case 'n':
+                args.no_profile = true;
+                break;
+            default: /* '?' */
+                print_usage(stderr);
+                shell.exit_code = EXIT_FAILURE;
+                args.should_exit = true;
+                return;
+        }
+    }
+
+    if (optind < argc) {
+        args.script = argv[optind];
+        args.should_exit = true;
+    }
+}
