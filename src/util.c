@@ -22,7 +22,10 @@ void trim(char *str) {
 
 
 void print_err(const char* head, const char* body) {
-    fprintf(stderr, "%s: %s: %s\n", shell.name, head, body);
+    if (body)
+        fprintf(stderr, "%s: %s: %s\n", shell.name, head, body);
+    else
+        fprintf(stderr, "%s: %s\n", shell.name, head);
 }
 
 

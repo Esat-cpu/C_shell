@@ -138,7 +138,7 @@ int main(int argc, char** argv) {
         ExeResult e = execute_line(command, &error_message);
 
         if (e) {
-            fprintf(stderr, "%s: %s\n", shell.name, error_message);
+            print_err(error_message, NULL);
             free(error_message);
         }
     }
