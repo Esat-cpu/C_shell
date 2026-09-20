@@ -3,6 +3,7 @@
 
 #include "ast.h"
 #include "tokenize.h"
+#include "util.h"
 
 
 // Appends a redirection to the end of the linked list, allocating
@@ -11,7 +12,7 @@ void append_to_redir_list(RedirList **list,
                             TokenType redir_type,
                             char *filename) {
     // Create RedirList node
-    RedirList* node = malloc(sizeof(RedirList));
+    RedirList* node = smalloc(sizeof(RedirList));
     node->redir_type = redir_type;
     node->filename = filename;
     node->savedfd = 0;
@@ -58,7 +59,7 @@ char* collect_redirection(Token* tokens, size_t *pos, size_t end, Node* node) {
         return NULL;
     }
     else {
-        char* error_message = malloc(64);
+        char* error_message = smalloc(64);
         snprintf(error_message, 64,
                 "Parse error near '%s'", tokens[*pos].value);
         return error_message;
@@ -76,9 +77,9 @@ Node* make_cmd_node(Token* tokens,
                     char** error_out) {
     size_t count = end - start;
 
-    Node* node = malloc(sizeof(Node));
+    Node* node = smalloc(sizeof(Node));
     node->type = T_WORD;
-    node->cmd.argv = malloc(sizeof(char*) * (count + 1));
+    node->cmd.argv = smalloc(sizeof(char*) * (count + 1));
     node->cmd.redir_list = NULL;
 
     size_t ind = 0;
@@ -101,12 +102,12 @@ Node* make_cmd_node(Token* tokens,
     node->cmd.argv[ind] = NULL;
 
     if (ind == 0) {
-        *error_out = malloc(64);
+        *error_out = smalloc(64);
 
-        if (i > 0)
-            snprintf(*error_out, 64, "Parse error near '%s'", tokens[i-1].value);
-        else if (tokens[i].value != NULL)
-            snprintf(*error_out, 64, "Parse error near '%s'", tokens[i].value);
+        const char* near = (i > 0) ? tokens[i-1].value : tokens[i].value;
+
+        if (near)
+            snprintf(*error_out, 64, "Parse error near '%s'", near);
         else
             snprintf(*error_out, 64, "Parse error near newline");
 
@@ -121,7 +122,7 @@ Node* make_cmd_node(Token* tokens,
 // Builds a bare operator node (PIPE, AND, OR, etc.) with no children yet;
 // the caller is expected to attach left/right.
 Node* make_operator_node(Token token) {
-    Node* node = malloc(sizeof(Node));
+    Node* node = smalloc(sizeof(Node));
     node->type = token.token_type;
     node->operator.left = NULL;
     node->operator.right = NULL;

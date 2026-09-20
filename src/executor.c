@@ -9,7 +9,7 @@
 #include <sys/wait.h>
 
 #include "executor.h"
-#include "trim.h"
+#include "util.h"
 #include "tokenize.h"
 #include "ast.h"
 #include "parser.h"
@@ -45,8 +45,7 @@ static ExeResult apply_redirections(RedirList* r) {
 
         int fd = open(r->filename, flags, 0644);
         if (fd == -1) {
-            fprintf(stderr, "%s: %s: %s\n",
-                    shell.name, r->filename, strerror(errno));
+            print_err(r->filename, strerror(errno));
             return E_FILE_ERROR;
         }
 
@@ -97,13 +96,11 @@ static int execute_cmd_node_for_pipe(Node* node) {
     execvp(node->cmd.argv[0], node->cmd.argv);
 
     if (errno == EACCES) {
-        fprintf(stderr, "%s: %s: %s\n",
-                shell.name, node->cmd.argv[0], strerror(errno));
+        print_err(node->cmd.argv[0], strerror(errno));
         return 126;
     }
     else {
-        fprintf(stderr, "%s: %s: Command not found...\n",
-                        shell.name, node->cmd.argv[0]);
+        print_err(node->cmd.argv[0], "Command not found...");
         return 127;
     }
 }
@@ -134,13 +131,11 @@ static void execute_cmd_node(Node* node) {
         execvp(node->cmd.argv[0], node->cmd.argv);
 
         if (errno == EACCES) {
-            fprintf(stderr, "%s: %s: %s\n",
-                    shell.name, node->cmd.argv[0], strerror(errno));
+            print_err(node->cmd.argv[0], strerror(errno));
             _exit(126);
         }
         else {
-            fprintf(stderr, "%s: %s: Command not found...\n",
-                            shell.name, node->cmd.argv[0]);
+            print_err(node->cmd.argv[0], "Command not found...");
             _exit(127);
         }
     }
@@ -151,9 +146,8 @@ static void execute_cmd_node(Node* node) {
             shell.exit_code = WEXITSTATUS(status);
     }
 
-    else {
-        fprintf(stderr, "%s: fork: %s\n", shell.name, strerror(errno));
-    }
+    else
+        print_err("fork", strerror(errno));
 
     restore_redirections(node->cmd.redir_list);
 }
@@ -197,8 +191,7 @@ static int pipe_traversal(Node* node,
                 (*pid_pos)++;
 
             else {
-                fprintf(stderr, "%s: fork: %s\n",
-                        shell.name, strerror(errno));
+                print_err("fork", strerror(errno));
                 return EXIT_FAILURE;
             }
         }
@@ -227,8 +220,7 @@ static void pipe_handle(Node* node) {
 
         if (p == -1) {
             shell.exit_code = EXIT_FAILURE;
-            fprintf(stderr, "%s: pipe: %s\n",
-                    shell.name, strerror(errno));
+            print_err("pipe", strerror(errno));
             return;
         }
     }
@@ -341,8 +333,7 @@ ExeResult execute_file(const char* filename) {
     FILE* file = fopen(filename, "r");
 
     if (file == NULL) {
-        fprintf(stderr, "%s: %s: %s\n",
-                        shell.name, filename, strerror(errno));
+        print_err(filename, strerror(errno));
         return E_FILE_ERROR;
     }
 

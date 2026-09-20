@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "trim.h"
+#include "util.h"
 
 
 struct TrimTestCase {

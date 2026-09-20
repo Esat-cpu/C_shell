@@ -5,33 +5,26 @@
 
 #include "expansion.h"
 #include "tokenize.h"
+#include "util.h"
 #include "shell.h"
 
 #define BUF_SIZE 256
 
 
-static int ensure_capacity(char** buffer, size_t* cap, size_t len, size_t n) {
+static void ensure_capacity(char** buffer, size_t* cap, size_t len, size_t n) {
     if (*cap == 0) *cap = 16;
 
     while (len + n >= *cap) {
         *cap *= 2;
-
-        char* tmp = realloc(*buffer, *cap);
-
-        if (tmp)
-            *buffer = tmp;
-        else
-            return -1;
+        *buffer = srealloc(*buffer, *cap);
     }
-
-    return 0;
 }
 
 
 static void expand_param_in_token(Token* token) {
     // New buffer for expanded token value
     size_t str_size = BUF_SIZE;
-    char* str = malloc(str_size);
+    char* str = smalloc(str_size);
     size_t len = 0;
 
 
@@ -51,10 +44,7 @@ static void expand_param_in_token(Token* token) {
                 // convert exit code to string
                 snprintf(code, 16, "%d", shell.exit_code);
 
-                if (ensure_capacity(&str, &str_size, len, strlen(code)) < 0) {
-                    free(str);
-                    return;
-                }
+                ensure_capacity(&str, &str_size, len, strlen(code));
 
                 // append exit_code to the result string
                 for (size_t j = 0; code[j]; ++j) {
@@ -89,10 +79,7 @@ static void expand_param_in_token(Token* token) {
                 if (env) {
                     size_t env_size = strlen(env);
 
-                    if (ensure_capacity(&str, &str_size, len, env_size) < 0) {
-                        free(str);
-                        return;
-                    }
+                    ensure_capacity(&str, &str_size, len, env_size);
 
                     for (int j = 0; env[j]; ++j) {
                         str[len++] = env[j];
@@ -102,10 +89,7 @@ static void expand_param_in_token(Token* token) {
 
             else {
                 // treat '$' as literal
-                if (ensure_capacity(&str, &str_size, len, 1) < 0) {
-                    free(str);
-                    return;
-                }
+                ensure_capacity(&str, &str_size, len, 1);
 
                 str[len++] = *ch;
                 i++;
@@ -114,10 +98,7 @@ static void expand_param_in_token(Token* token) {
         }
 
         else {
-            if (ensure_capacity(&str, &str_size, len, 1) < 0) {
-                free(str);
-                return;
-            }
+            ensure_capacity(&str, &str_size, len, 1);
 
             str[len++] = *ch;
             i++;

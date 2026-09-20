@@ -11,7 +11,7 @@
 #include <readline/history.h>
 
 #include "prompt_build.h"
-#include "trim.h"
+#include "util.h"
 #include "executor.h"
 #include "shell.h"
 
