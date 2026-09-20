@@ -1,31 +1,48 @@
-# Compiler and target executable name
+# Usage:
+#   make             release build (build/release/she)
+#   make asan        release + AddressSanitizer (build/release-asan/she)
+#   make test        build and run unit tests
+#   make test-asan   build and run tests with AddressSanitizer
+#   make clean       delete the build directory
+#   DEBUG=1 make     debug tree instead of release (build/debug)
+
+# Compiler, target executable and version
 CC          := gcc
 TARGET      := she
 VERSION     := 0.1.0
 
 
-# Directories, files and their flags
+# Source, build and config directories
 BUILD_DIR   := build
 SRC_DIR     := src
 
 RELEASE_DIR  := $(BUILD_DIR)/release
 DEBUG_DIR    := $(BUILD_DIR)/debug
 
-
+# Build modes (0, 1). Output trees are isolated per config
+# so switching modes never reuses stale objects/binaries.
 DEBUG ?= 0
+ASAN  ?= 0
 
 ifeq ($(DEBUG),0)
-OBJ_DIR     := $(RELEASE_DIR)/obj
-TARGET_EXEC := $(RELEASE_DIR)/$(TARGET)
-# Flags for release
-CFLAGS      := -O2
+	CFG         := $(RELEASE_DIR)
+	# Compiler flags for release
+	CFLAGS      += -O2
 else
-OBJ_DIR     := $(DEBUG_DIR)/obj
-TARGET_EXEC := $(DEBUG_DIR)/$(TARGET)
-# Flags for debug
-CFLAGS      := -g3 -O0
+	CFG         := $(DEBUG_DIR)
+	# Compiler flags for debug
+	CFLAGS      += -g3 -O0
 endif
 
+ifeq ($(ASAN),1)
+	CFG     := $(CFG)-asan
+	CFLAGS  += -fsanitize=address
+	LDFLAGS += -fsanitize=address
+endif
+
+
+OBJ_DIR     := $(CFG)/obj
+TARGET_EXEC := $(CFG)/$(TARGET)
 
 SRCS        := $(shell find $(SRC_DIR) -type f -name "*.c")
 OBJS        := $(SRCS:%.c=$(OBJ_DIR)/%.o)
@@ -41,7 +58,7 @@ TEST_LIB    := $(TEST_DIR)/test_lib
 TEST_SRCS   := $(shell find $(TEST_DIR) -type f -name "*.c")
 TEST_OBJS   := $(TEST_SRCS:%.c=$(OBJ_DIR)/%.o)
 
-TEST_BIN_DIR := $(BUILD_DIR)/test
+TEST_BIN_DIR := $(CFG)/test
 
 
 # Compiler Flags
@@ -50,16 +67,18 @@ DEPFLAGS    := -MMD -MP
 
 CPPFLAGS    := $(INC_FLAGS) $(DEPFLAGS) -DSHE_VERSION=\"$(VERSION)\"
 CFLAGS      += -Wall -Wextra
-LDFLAGS     := -lreadline
+LDLIBS      += -lreadline
 
 
 # Targets
 
 all: $(TARGET_EXEC)
+asan:
+	$(MAKE) all ASAN=1
 
 $(TARGET_EXEC): $(OBJS)
 	@mkdir -p $(@D)
-	$(CC) $^ -o $@ $(LDFLAGS)
+	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
 
 
 $(OBJ_DIR)/%.o: %.c
@@ -77,21 +96,21 @@ $(TEST_BIN_DIR)/cd_test: $(OBJ_DIR)/$(TEST_DIR)/cd_test.o \
 							$(OBJ_DIR)/$(SRC_DIR)/builtins/cd.o \
 							$(OBJ_DIR)/$(SRC_DIR)/shell.o
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $(LDFLAGS) $^ -o $@
 
 
 $(TEST_BIN_DIR)/trim_test: $(OBJ_DIR)/$(TEST_DIR)/trim_test.o \
 							$(OBJ_DIR)/$(SRC_DIR)/util.o \
 							$(OBJ_DIR)/$(SRC_DIR)/shell.o
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $(LDFLAGS) $^ -o $@
 
 
 $(TEST_BIN_DIR)/tokenize_test: $(OBJ_DIR)/$(TEST_DIR)/tokenize_test.o \
 								$(OBJ_DIR)/$(SRC_DIR)/tokenize.o \
 								$(OBJ_DIR)/$(TEST_LIB)/test_lib.o
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $(LDFLAGS) $^ -o $@
 
 
 $(TEST_BIN_DIR)/expansion_test: $(OBJ_DIR)/$(TEST_DIR)/expansion_test.o \
@@ -101,7 +120,7 @@ $(TEST_BIN_DIR)/expansion_test: $(OBJ_DIR)/$(TEST_DIR)/expansion_test.o \
 								$(OBJ_DIR)/$(SRC_DIR)/util.o \
 								$(OBJ_DIR)/$(SRC_DIR)/shell.o
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $(LDFLAGS) $^ -o $@
 
 
 $(TEST_BIN_DIR)/parser_test: $(OBJ_DIR)/$(TEST_DIR)/parser_test.o \
@@ -112,7 +131,7 @@ $(TEST_BIN_DIR)/parser_test: $(OBJ_DIR)/$(TEST_DIR)/parser_test.o \
 								$(OBJ_DIR)/$(SRC_DIR)/util.o \
 								$(OBJ_DIR)/$(SRC_DIR)/shell.o
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $(LDFLAGS) $^ -o $@
 
 
 test: $(TEST_BIN_DIR)/cd_test \
@@ -123,14 +142,14 @@ test: $(TEST_BIN_DIR)/cd_test \
 	$(foreach bin,$^,./$(bin);)
 
 
-test-asan: CFLAGS += -fsanitize=address
-test-asan: test
+test-asan:
+	$(MAKE) test ASAN=1
 
 
 # Clean build
 clean:
 	rm -r $(BUILD_DIR)
 
-.PHONY: all clean test test-asan
+.PHONY: all asan clean test test-asan
 
 -include $(DEPS)
