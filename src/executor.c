@@ -296,6 +296,12 @@ static void execute_ast(Node* root) {
 // Returns E_PARSE_ERROR on parse error and writes its error
 // message to error_out.
 ExeResult execute_line(char* line, char **error_out) {
+    // Trimming spaces at the start and end of the command.
+    trim(line);
+    // Return on empty or comment line.
+    if (line[0] == '\0' || line[0] == '#')
+        return E_SUCCESS;
+
     Token tokens[MAX_TOKENS];
     Node* root = NULL;
     char *error_message = NULL;
@@ -309,6 +315,12 @@ ExeResult execute_line(char* line, char **error_out) {
     if (root == NULL) {
         *error_out = error_message;
         free_tokens(tokens);
+
+        // Set exit code to EXIT_FAILURE if it is set to 0 (success),
+        // otherwise, leave the previous exit code as-is.
+        if (shell.exit_code == 0)
+            shell.exit_code = EXIT_FAILURE;
+
         return E_PARSE_ERROR;
     }
 
@@ -334,6 +346,7 @@ ExeResult execute_file(const char* filename) {
 
     if (file == NULL) {
         print_err(filename, strerror(errno));
+        shell.exit_code = 127;
         return E_FILE_ERROR;
     }
 
@@ -342,10 +355,6 @@ ExeResult execute_file(const char* filename) {
     char* error_message = NULL;
 
     while (fgets(line, MAX_LINE_SIZE, file)) {
-        // trimming spaces at the start and end of the line
-        trim(line);
-        if (!line[0] || line[0] == '#') continue;
-
         ExeResult ex = execute_line(line, &error_message);
 
         if (ex == E_PARSE_ERROR) {
