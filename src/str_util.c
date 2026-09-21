@@ -1,0 +1,76 @@
+#include <string.h>
+#include <stdio.h>
+
+#include "str_util.h"
+#include "util.h"
+
+#define START_BUFFER_SIZE 256
+
+
+static void ensure_capacity(String* str, size_t n) {
+    if (str->cap == 0) str->cap = 16;
+
+    while ((str->len + n) >= str->cap) {
+        str->cap *= 2;
+        str->data = srealloc(str->data, str->cap);
+    }
+}
+
+
+String* new_string(void) {
+    String* str = smalloc(sizeof(String));
+
+    str->data = smalloc(START_BUFFER_SIZE);
+    str->cap = START_BUFFER_SIZE;
+    str->data[0] = '\0';
+    str->len = 0;
+
+    return str;
+}
+
+
+void add_chr_to_str(String *str, char ch) {
+    ensure_capacity(str, 1);
+    str->data[str->len++] = ch;
+    str->data[str->len] = '\0';
+}
+
+
+void add_span_to_str(String *str, char *start, char *end) {
+    if (end - start <= 0) return;
+    size_t count = end - start;
+
+    ensure_capacity(str, count);
+
+    for (char *iter = start; iter != end; ++iter) {
+        str->data[str->len++] = *iter;
+    }
+    str->data[str->len] = '\0';
+}
+
+
+void add_slice_to_str(String *str, char *buffer) {
+    size_t count = strlen(buffer);
+    if (count == 0) return;
+
+    ensure_capacity(str, count);
+
+    for (size_t i = 0; i < count; ++i)
+        str->data[str->len++] = buffer[i];
+
+    str->data[str->len] = '\0';
+}
+
+
+void add_int_to_str(String *str, int num) {
+    char buf[16];
+    snprintf(buf, 16, "%d", num);
+    size_t buf_len = strlen(buf);
+
+    ensure_capacity(str, buf_len);
+
+    for (char* ch = buf; *ch; ++ch)
+        str->data[str->len++] = *ch;
+
+    str->data[str->len] = '\0';
+}
