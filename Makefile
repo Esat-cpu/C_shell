@@ -118,6 +118,7 @@ $(TEST_BIN_DIR)/expansion_test: $(OBJ_DIR)/$(TEST_DIR)/expansion_test.o \
 								$(OBJ_DIR)/$(SRC_DIR)/expansion.o \
 								$(OBJ_DIR)/$(SRC_DIR)/tokenize.o \
 								$(OBJ_DIR)/$(SRC_DIR)/util.o \
+								$(OBJ_DIR)/$(SRC_DIR)/str_util.o \
 								$(OBJ_DIR)/$(SRC_DIR)/shell.o
 	@mkdir -p $(@D)
 	$(CC) $(LDFLAGS) $^ -o $@

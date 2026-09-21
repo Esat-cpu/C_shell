@@ -5,119 +5,92 @@
 
 #include "expansion.h"
 #include "tokenize.h"
-#include "util.h"
+#include "str_util.h"
 #include "shell.h"
 
-#define BUF_SIZE 256
 
+// Finds dollar signs and the special escape character that is
+// set in tokenizer.
+static char* next_dollar_sign(char* buf) {
+    while (*buf != '\0') {
+        if (*buf == '\x01' || *buf == '$')
+            return buf;
 
-static void ensure_capacity(char** buffer, size_t* cap, size_t len, size_t n) {
-    if (*cap == 0) *cap = 16;
-
-    while (len + n >= *cap) {
-        *cap *= 2;
-        *buffer = srealloc(*buffer, *cap);
+        buf++;
     }
+
+    return NULL;
 }
 
 
 static void expand_param_in_token(Token* token) {
+    char *ch = next_dollar_sign(token->value);
+    if (!ch) return;
+
     // New buffer for expanded token value
-    size_t str_size = BUF_SIZE;
-    char* str = smalloc(str_size);
-    size_t len = 0;
+    String* str = new_string();
+    char *start = token->value;
 
+    do {
+        add_span_to_str(str, start, ch);
+        char *next = ch+1;
 
-    size_t i = 0;
-    while (token->value[i]) {
-        char *ch = &token->value[i];
+        // Escape case
+        if (*ch == '\x01') {
+            ch++;
+            add_chr_to_str(str, *ch);
+            ch++;
+        }
 
-
-        if (*ch == '$') {
-            char *start = (ch + 1); // char after '$'
-            char *end = start;
-
-            if (*start == '?') {
-                i += 2;
-                char code[16];
-
-                // convert exit code to string
-                snprintf(code, 16, "%d", shell.exit_code);
-
-                ensure_capacity(&str, &str_size, len, strlen(code));
-
-                // append exit_code to the result string
-                for (size_t j = 0; code[j]; ++j) {
-                    str[len++] = code[j];
-                }
+        else { /* *ch == '$' */
+            // $? case
+            // Expand parameter as exit code
+            if (*next == '?') {
+                add_int_to_str(str, shell.exit_code);
+                ch = next+1;
             }
 
+            // $0, $1, $2 ... case
+            // Expand parameter as context argument
+            else if (isdigit((unsigned char) *next)) {
+                int ind = strtol(next, &ch, 10);
 
-            else if (isdigit((unsigned char) *start)) {
-                int ind = strtol(start, &end, 10);
-
-                if (ind < shell.argc) {
-                    ensure_capacity(
-                            &str, &str_size, len, strlen(shell.argv[ind]));
-
-                    for (size_t j = 0; shell.argv[ind][j]; ++j) {
-                        str[len++] = shell.argv[ind][j];
-                    }
-
-                }
-
-                i = (int)(end - token->value);
+                if (ind < shell.argc)
+                    add_slice_to_str(str, shell.argv[ind]);
             }
 
+            // $ENV_VARIABLE case
+            // Expand parameter as environment variable
+            else if (isalnum((unsigned char) *next) || *next == '_') {
+                ch = next;
+                while ((isalnum((unsigned char) *next) || *next == '_'))
+                    next++;
 
-            else if (isalnum((unsigned char) *start) || *start == '_') {
-                while (isalnum((unsigned char) *end) || *end == '_') {
-                    end++;
-                }
+                char* env_name = strndup(ch, (next - ch));
 
-                size_t var_len = end - start;
-                i = (int)(end - token->value);
+                char* env_value;
+                if ((env_value = getenv(env_name)))
+                    add_slice_to_str(str, env_value);
 
-                char var[var_len + 1];
-                memcpy(var, start, var_len);
-                var[var_len] = '\0';
-
-                char* env = getenv(var);
-
-                if (env) {
-                    size_t env_size = strlen(env);
-
-                    ensure_capacity(&str, &str_size, len, env_size);
-
-                    for (int j = 0; env[j]; ++j) {
-                        str[len++] = env[j];
-                    }
-                }
+                ch = next;
+                free(env_name);
             }
 
+            // Take dollar sign as-is
             else {
-                // treat '$' as literal
-                ensure_capacity(&str, &str_size, len, 1);
-
-                str[len++] = *ch;
-                i++;
+                add_chr_to_str(str, '$');
+                ch++;
             }
-
         }
 
-        else {
-            ensure_capacity(&str, &str_size, len, 1);
+        start = ch;
+    } while ((ch = next_dollar_sign(ch)));
 
-            str[len++] = *ch;
-            i++;
-        }
-    }
-
-    str[len] = '\0';
-
+    add_slice_to_str(str, start);
 
     free(token->value);
-    token->value = str;
+    token->value = str->data;
+    free(str);
 }
 
 

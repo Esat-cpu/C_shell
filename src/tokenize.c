@@ -86,6 +86,14 @@ size_t tokenize(const char* input, Token* tokens, size_t max_tokens) {
         //  if so, do not take the '\' character and set
         //+ escape status to 1
         if (*ch == '\\' && !escape && status != SINGLE_Q) {
+            // If the character after escape character is '$',
+            // switch escape to special character '\x01' for the
+            // parameter expansion.
+            if (*(ch+1) == '$') {
+                buf[len++] = '\x01';
+                continue;
+            }
+
             escape = true;
             continue;
         }
