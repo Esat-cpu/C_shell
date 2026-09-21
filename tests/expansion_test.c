@@ -164,8 +164,8 @@ test_param_expansion_digits() {
 static void
 test_param_expansion_dollar_sign_as_literal() {
     TestCase c = {
-        "echo $ $$ $- foo$ 42$",
-        {"echo", "$", "$$", "$-", "foo$", "42$", NULL},
+        "echo $ $- foo$ 42$",
+        {"echo", "$", "$-", "foo$", "42$", NULL},
     };
 
     tokenize(c.command, args, MAX_ARGS);

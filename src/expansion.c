@@ -1,5 +1,5 @@
-#include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <ctype.h>
 
@@ -74,6 +74,13 @@ static void expand_param_in_token(Token* token) {
 
                 ch = next;
                 free(env_name);
+            }
+
+            // $$ case
+            // Expand parameter as shell's PID
+            else if (*next == '$') {
+                add_int_to_str(str, (int)getpid());
+                ch = next+1;
             }
 
             // Take dollar sign as-is
