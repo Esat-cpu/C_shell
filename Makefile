@@ -65,7 +65,9 @@ TEST_BIN_DIR := $(CFG)/test
 DEPS        := $(OBJS:%.o=%.d) $(TEST_OBJS:%.o=%.d)
 DEPFLAGS    := -MMD -MP
 
-CPPFLAGS    := $(INC_FLAGS) $(DEPFLAGS) -DSHE_VERSION=\"$(VERSION)\"
+CPPFLAGS    := $(INC_FLAGS) $(DEPFLAGS)      \
+               -DSHE_VERSION=\"$(VERSION)\"  \
+               -DSHE_BUILD=\"$(notdir $(CFG))\"
 CFLAGS      += -Wall -Wextra
 LDLIBS      += -lreadline
 

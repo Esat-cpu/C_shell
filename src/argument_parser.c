@@ -31,7 +31,7 @@ static void print_usage(FILE* out_stream) {
 
 
 static void print_version() {
-    printf("%s v%s\n", shell.name, SHE_VERSION);
+    printf("%s %s %s\n", shell.name, SHE_VERSION, SHE_BUILD);
 }
 
 
