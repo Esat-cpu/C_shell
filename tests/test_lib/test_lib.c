@@ -154,6 +154,6 @@ run_tests_impl(const char* name, const test_callback_t funcs[], size_t count) {
 
     end(name);
 
-    if (fail_flag)  return EXIT_FAILURE;
-    else            return EXIT_SUCCESS;
+    if (test_fail > 0)  return EXIT_FAILURE;
+    else                return EXIT_SUCCESS;
 }
