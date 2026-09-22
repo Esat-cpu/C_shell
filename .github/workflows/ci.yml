@@ -28,11 +28,14 @@ jobs:
 
       - name: "Install dependencies (Ubuntu)"
         if: matrix.container == 'ubuntu:latest'
-        run: apt-get update && apt-get install -y gcc make libreadline-dev
+        run: |
+          apt-get update
+          apt-get install -y gcc make libreadline-dev python3 python3-pytest
 
       - name: "Install dependencies (Alpine)"
         if: matrix.container == 'alpine:latest'
-        run: apk add --no-cache gcc make musl-dev readline-dev
+        run: |
+          apk add --no-cache gcc make musl-dev readline-dev python3 py3-pytest
 
       - name: "Build"
         run: make
@@ -49,7 +52,14 @@ jobs:
         uses: actions/checkout@v7
 
       - name: "Install dependencies"
-        run: sudo apt-get update && sudo apt-get install -y make libreadline-dev
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            gcc \
+            make \
+            libreadline-dev \
+            python3 \
+            python3-pytest
 
       - name: "Run tests with address sanitizer"
         run: DEBUG=1 make test-asan

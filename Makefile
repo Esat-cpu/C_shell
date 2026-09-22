@@ -75,6 +75,7 @@ LDLIBS      += -lreadline
 # Targets
 
 all: $(TARGET_EXEC)
+
 asan:
 	$(MAKE) all ASAN=1
 
@@ -137,22 +138,27 @@ $(TEST_BIN_DIR)/parser_test: $(OBJ_DIR)/$(TEST_DIR)/parser_test.o \
 	$(CC) $(LDFLAGS) $^ -o $@
 
 
-test: $(TEST_BIN_DIR)/cd_test \
+test-unit: $(TEST_BIN_DIR)/cd_test \
 		$(TEST_BIN_DIR)/trim_test \
 		$(TEST_BIN_DIR)/tokenize_test \
 		$(TEST_BIN_DIR)/expansion_test \
 		$(TEST_BIN_DIR)/parser_test
 	$(foreach bin,$^,./$(bin);)
 
+test-unit-asan:
+	$(MAKE) test-unit ASAN=1
 
-test-asan:
-	$(MAKE) test ASAN=1
+test-py: $(TARGET_EXEC)
+	pytest $(TEST_DIR)/integration --she-path $(TARGET_EXEC)
 
+test: test-unit test-py
+
+test-asan: test-unit-asan test-py
 
 # Clean build
 clean:
-	rm -r $(BUILD_DIR)
+	rm -rf $(BUILD_DIR) .pytest_cache $(TEST_DIR)/integration/__pycache__
 
-.PHONY: all asan clean test test-asan
+.PHONY: all asan clean test test-asan test-unit test-unit-asan test-py
 
 -include $(DEPS)
