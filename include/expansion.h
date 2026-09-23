@@ -4,6 +4,6 @@
 #include "tokenize.h"
 
 
-void expand_param(Token* args);
+int expand_param(Token* args, char **error_out);
 
 #endif

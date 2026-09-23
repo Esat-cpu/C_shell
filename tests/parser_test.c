@@ -139,7 +139,7 @@ test_parse_command() {
 
     command_to_parsed_str(c.command, out, NULL);
 
-    ASSERT_EQ (out, c.expected_ast);
+    ASSERT_EQ(out, c.expected_ast);
 
     free_ast(root);
     free_tokens(tokens);
@@ -166,25 +166,25 @@ test_parse_redirection_operators() {
     };
 
     command_to_parsed_str(c1.command, out, NULL);
-    ASSERT_EQ (out, c1.expected_ast);
+    ASSERT_EQ(out, c1.expected_ast);
 
     free_ast(root);
     free_tokens(tokens);
 
     command_to_parsed_str(c2.command, out, NULL);
-    ASSERT_EQ (out, c2.expected_ast);
+    ASSERT_EQ(out, c2.expected_ast);
 
     free_ast(root);
     free_tokens(tokens);
 
     command_to_parsed_str(c3.command, out, NULL);
-    ASSERT_EQ (out, c3.expected_ast);
+    ASSERT_EQ(out, c3.expected_ast);
 
     free_ast(root);
     free_tokens(tokens);
 
     command_to_parsed_str(c4.command, out, NULL);
-    ASSERT_EQ (out, c4.expected_ast);
+    ASSERT_EQ(out, c4.expected_ast);
 
     free_ast(root);
     free_tokens(tokens);
@@ -200,7 +200,7 @@ test_parse_logical_operators() {
 
     command_to_parsed_str(c.command, out, NULL);
 
-    ASSERT_EQ (out, c.expected_ast);
+    ASSERT_EQ(out, c.expected_ast);
 
     free_ast(root);
     free_tokens(tokens);
@@ -216,7 +216,7 @@ test_parse_pipe_operator() {
 
     command_to_parsed_str(c.command, out, NULL);
 
-    ASSERT_EQ (out, c.expected_ast);
+    ASSERT_EQ(out, c.expected_ast);
 
     free_ast(root);
     free_tokens(tokens);
@@ -232,7 +232,7 @@ test_parse_semicolons() {
 
     command_to_parsed_str(c.command, out, NULL);
 
-    ASSERT_EQ (out, c.expected_ast);
+    ASSERT_EQ(out, c.expected_ast);
 
     free_ast(root);
     free_tokens(tokens);
@@ -254,13 +254,13 @@ test_parse_mix() {
     };
 
     command_to_parsed_str(c1.command, out, NULL);
-    ASSERT_EQ (out, c1.expected_ast);
+    ASSERT_EQ(out, c1.expected_ast);
 
     free_ast(root);
     free_tokens(tokens);
 
     command_to_parsed_str(c2.command, out, NULL);
-    ASSERT_EQ (out, c2.expected_ast);
+    ASSERT_EQ(out, c2.expected_ast);
 
     free_ast(root);
     free_tokens(tokens);
@@ -285,21 +285,21 @@ test_parse_error_message() {
     char* err = NULL;
 
     command_to_parsed_str(c1.command, out, &err);
-    ASSERT_EQ (err, c1.expected_message);
+    ASSERT_EQ(err, c1.expected_message);
 
     free(err);
     free_ast(root);
     free_tokens(tokens);
 
     command_to_parsed_str(c2.command, out, &err);
-    ASSERT_EQ (err, c2.expected_message);
+    ASSERT_EQ(err, c2.expected_message);
 
     free(err);
     free_ast(root);
     free_tokens(tokens);
 
     command_to_parsed_str(c3.command, out, &err);
-    ASSERT_EQ (err, c3.expected_message);
+    ASSERT_EQ(err, c3.expected_message);
 
     free(err);
     free_ast(root);

@@ -14,7 +14,7 @@ typedef struct {
 } TestCase;
 
 
-Token args[MAX_ARGS];
+Token tokens[MAX_ARGS];
 char* arr[MAX_ARGS];
 
 
@@ -22,8 +22,9 @@ static void
 set_up() {
     setenv("TEST_ENV_VAR", "test", 1);
 
-    static char* argv[3] = {"shell", "test", NULL};
+    static char* argv[3] = {"shell", "test_arg", NULL};
 
+    shell.name = "shell";
     shell.argc = 2;
     shell.argv = argv;
 }
@@ -39,14 +40,15 @@ test_param_expansion_with_home_var() {
         {"echo", env_home, NULL},
     };
 
-    tokenize(c.command, args, MAX_ARGS);
-    expand_param(args);
+    char *msg = NULL;
+    tokenize(c.command, tokens, MAX_ARGS);
+    expand_param(tokens, &msg);
 
-    tokens_to_str_arr(args, arr);
+    tokens_to_str_arr(tokens, arr);
 
-    ASSERT_EQ (arr, c.expected_args);
+    ASSERT_EQ(arr, c.expected_args);
 
-    free_tokens(args);
+    free_tokens(tokens);
 }
 
 
@@ -57,14 +59,15 @@ test_param_expansion_unquoted() {
         {"echo", "test", NULL},
     };
 
-    tokenize(c.command, args, MAX_ARGS);
-    expand_param(args);
+    char *msg = NULL;
+    tokenize(c.command, tokens, MAX_ARGS);
+    expand_param(tokens, &msg);
 
-    tokens_to_str_arr(args, arr);
+    tokens_to_str_arr(tokens, arr);
 
-    ASSERT_EQ (arr, c.expected_args);
+    ASSERT_EQ(arr, c.expected_args);
 
-    free_tokens(args);
+    free_tokens(tokens);
 }
 
 
@@ -75,14 +78,15 @@ test_param_expansion_double_quoted() {
         {"echo", "test", NULL},
     };
 
-    tokenize(c.command, args, MAX_ARGS);
-    expand_param(args);
+    char *msg = NULL;
+    tokenize(c.command, tokens, MAX_ARGS);
+    expand_param(tokens, &msg);
 
-    tokens_to_str_arr(args, arr);
+    tokens_to_str_arr(tokens, arr);
 
-    ASSERT_EQ (arr, c.expected_args);
+    ASSERT_EQ(arr, c.expected_args);
 
-    free_tokens(args);
+    free_tokens(tokens);
 }
 
 
@@ -93,14 +97,15 @@ test_param_expansion_single_quoted() {
         {"echo", "$TEST_ENV_VAR", NULL},
     };
 
-    tokenize(c.command, args, MAX_ARGS);
-    expand_param(args);
+    char *msg = NULL;
+    tokenize(c.command, tokens, MAX_ARGS);
+    expand_param(tokens, &msg);
 
-    tokens_to_str_arr(args, arr);
+    tokens_to_str_arr(tokens, arr);
 
-    ASSERT_EQ (arr, c.expected_args);
+    ASSERT_EQ(arr, c.expected_args);
 
-    free_tokens(args);
+    free_tokens(tokens);
 }
 
 
@@ -111,14 +116,15 @@ test_param_expansion_with_slash() {
         {"echo", "/hello/test/world", NULL},
     };
 
-    tokenize(c.command, args, MAX_ARGS);
-    expand_param(args);
+    char *msg = NULL;
+    tokenize(c.command, tokens, MAX_ARGS);
+    expand_param(tokens, &msg);
 
-    tokens_to_str_arr(args, arr);
+    tokens_to_str_arr(tokens, arr);
 
-    ASSERT_EQ (arr, c.expected_args);
+    ASSERT_EQ(arr, c.expected_args);
 
-    free_tokens(args);
+    free_tokens(tokens);
 }
 
 
@@ -131,14 +137,15 @@ test_param_expansion_exit_code() {
         {"echo", "42", NULL},
     };
 
-    tokenize(c.command, args, MAX_ARGS);
-    expand_param(args);
+    char *msg = NULL;
+    tokenize(c.command, tokens, MAX_ARGS);
+    expand_param(tokens, &msg);
 
-    tokens_to_str_arr(args, arr);
+    tokens_to_str_arr(tokens, arr);
 
-    ASSERT_EQ (arr, c.expected_args);
+    ASSERT_EQ(arr, c.expected_args);
 
-    free_tokens(args);
+    free_tokens(tokens);
 }
 
 
@@ -147,17 +154,18 @@ static void
 test_param_expansion_digits() {
     TestCase c = {
         "echo $1 $2 foo$42bar",
-        {"echo", "test", "", "foobar", NULL},
+        {"echo", "test_arg", "", "foobar", NULL},
     };
 
-    tokenize(c.command, args, MAX_ARGS);
-    expand_param(args);
+    char *msg = NULL;
+    tokenize(c.command, tokens, MAX_ARGS);
+    expand_param(tokens, &msg);
 
-    tokens_to_str_arr(args, arr);
+    tokens_to_str_arr(tokens, arr);
 
-    ASSERT_EQ (arr, c.expected_args);
+    ASSERT_EQ(arr, c.expected_args);
 
-    free_tokens(args);
+    free_tokens(tokens);
 }
 
 
@@ -168,14 +176,15 @@ test_param_expansion_dollar_sign_as_literal() {
         {"echo", "$", "$-", "foo$", "42$", NULL},
     };
 
-    tokenize(c.command, args, MAX_ARGS);
-    expand_param(args);
+    char *msg = NULL;
+    tokenize(c.command, tokens, MAX_ARGS);
+    expand_param(tokens, &msg);
 
-    tokens_to_str_arr(args, arr);
+    tokens_to_str_arr(tokens, arr);
 
-    ASSERT_EQ (arr, c.expected_args);
+    ASSERT_EQ(arr, c.expected_args);
 
-    free_tokens(args);
+    free_tokens(tokens);
 }
 
 
@@ -188,14 +197,34 @@ test_param_expansion_undeclared_var() {
         {"echo", "", NULL},
     };
 
-    tokenize(c.command, args, MAX_ARGS);
-    expand_param(args);
+    char *msg = NULL;
+    tokenize(c.command, tokens, MAX_ARGS);
+    expand_param(tokens, &msg);
 
-    tokens_to_str_arr(args, arr);
+    tokens_to_str_arr(tokens, arr);
 
-    ASSERT_EQ (arr, c.expected_args);
+    ASSERT_EQ(arr, c.expected_args);
 
-    free_tokens(args);
+    free_tokens(tokens);
+}
+
+
+static void
+test_param_expansion_with_braces() {
+    TestCase c = {
+        "echo ${TEST_ENV_VAR} ${1} ${} \\${2}",
+        {"echo", "test", "test_arg", "", "${2}", NULL},
+    };
+
+    char *msg = NULL;
+    tokenize(c.command, tokens, MAX_ARGS);
+    expand_param(tokens, &msg);
+
+    tokens_to_str_arr(tokens, arr);
+
+    ASSERT_EQ(arr, c.expected_args);
+
+    free_tokens(tokens);
 }
 
 
@@ -213,5 +242,6 @@ main() {
         test_param_expansion_digits,
         test_param_expansion_dollar_sign_as_literal,
         test_param_expansion_undeclared_var,
+        test_param_expansion_with_braces,
     );
 }

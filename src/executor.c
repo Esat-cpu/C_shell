@@ -296,6 +296,8 @@ static void execute_ast(Node* root) {
 
 // Returns E_PARSE_ERROR on parse error and writes its error
 // message to error_out.
+// On parse error, set exit code to EXIT_FAILURE if it is set
+// to 0 (success), otherwise, leave the previous exit code as-is.
 ExeResult execute_line(char* line, char **error_out) {
     // Trimming spaces at the start and end of the command.
     trim(line);
@@ -305,20 +307,24 @@ ExeResult execute_line(char* line, char **error_out) {
 
     Token tokens[MAX_TOKENS];
     Node* root = NULL;
-    char *error_message = NULL;
 
     size_t token_count = tokenize(line, tokens, MAX_TOKENS);
 
-    expand_param(tokens);
-
-    root = parse(tokens, token_count, &error_message);
-
-    if (root == NULL) {
-        *error_out = error_message;
+    int e = expand_param(tokens, error_out);
+    if (e) {
         free_tokens(tokens);
 
-        // Set exit code to EXIT_FAILURE if it is set to 0 (success),
-        // otherwise, leave the previous exit code as-is.
+        if (shell.exit_code == 0)
+            shell.exit_code = EXIT_FAILURE;
+
+        return E_PARSE_ERROR;
+    }
+
+    root = parse(tokens, token_count, error_out);
+
+    if (root == NULL) {
+        free_tokens(tokens);
+
         if (shell.exit_code == 0)
             shell.exit_code = EXIT_FAILURE;
 

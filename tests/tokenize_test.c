@@ -21,7 +21,7 @@ test_one_word() {
     tokenize(c.command, tokens, MAX_ARGS);
     tokens_to_str_arr(tokens, arr);
 
-    ASSERT_EQ (arr, c.expected_tokens);
+    ASSERT_EQ(arr, c.expected_tokens);
 
     free_tokens(tokens);
 }
@@ -35,7 +35,7 @@ test_words_with_space() {
     tokenize(c.command, tokens, MAX_ARGS);
     tokens_to_str_arr(tokens, arr);
 
-    ASSERT_EQ (arr, c.expected_tokens);
+    ASSERT_EQ(arr, c.expected_tokens);
 
     free_tokens(tokens);
 }
@@ -48,7 +48,7 @@ test_words_with_escape_and_space() {
     tokenize(c.command, tokens, MAX_ARGS);
     tokens_to_str_arr(tokens, arr);
 
-    ASSERT_EQ (arr, c.expected_tokens);
+    ASSERT_EQ(arr, c.expected_tokens);
 
     free_tokens(tokens);
 }
@@ -64,7 +64,7 @@ test_words_with_many_spaces() {
     tokenize(c.command, tokens, MAX_ARGS);
     tokens_to_str_arr(tokens, arr);
 
-    ASSERT_EQ (arr, c.expected_tokens);
+    ASSERT_EQ(arr, c.expected_tokens);
 
     free_tokens(tokens);
 }
@@ -81,7 +81,7 @@ test_double_quotes() {
     tokenize(c.command, tokens, MAX_ARGS);
     tokens_to_str_arr(tokens, arr);
 
-    ASSERT_EQ (arr, c.expected_tokens);
+    ASSERT_EQ(arr, c.expected_tokens);
 
     free_tokens(tokens);
 }
@@ -97,7 +97,7 @@ test_double_quotes_with_escape() {
     tokenize(c.command, tokens, MAX_ARGS);
     tokens_to_str_arr(tokens, arr);
 
-    ASSERT_EQ (arr, c.expected_tokens);
+    ASSERT_EQ(arr, c.expected_tokens);
 
     free_tokens(tokens);
 }
@@ -113,7 +113,7 @@ test_single_quotes_with_double_quotes_and_escape() {
     tokenize(c.command, tokens, MAX_ARGS);
     tokens_to_str_arr(tokens, arr);
 
-    ASSERT_EQ (arr, c.expected_tokens);
+    ASSERT_EQ(arr, c.expected_tokens);
 
     free_tokens(tokens);
 }
@@ -129,7 +129,7 @@ test_status_of_normal_tokens() {
 
     tokenize(c.command, tokens, MAX_ARGS);
 
-    ASSERT_EQ (tokens[0].quote_type, NORMAL);
+    ASSERT_EQ(tokens[0].quote_type, NORMAL);
 
     free_tokens(tokens);
 }
@@ -144,8 +144,8 @@ test_status_of_double_quoted_tokens() {
 
     tokenize(c.command, tokens, MAX_ARGS);
 
-    ASSERT_EQ (tokens[0].quote_type, NORMAL);
-    ASSERT_EQ (tokens[1].quote_type, DOUBLE_Q);
+    ASSERT_EQ(tokens[0].quote_type, NORMAL);
+    ASSERT_EQ(tokens[1].quote_type, DOUBLE_Q);
 
     free_tokens(tokens);
 }
@@ -160,8 +160,8 @@ test_status_of_single_quoted_tokens() {
 
     tokenize(c.command, tokens, MAX_ARGS);
 
-    ASSERT_EQ (tokens[0].quote_type, SINGLE_Q);
-    ASSERT_EQ (tokens[1].quote_type, NORMAL);
+    ASSERT_EQ(tokens[0].quote_type, SINGLE_Q);
+    ASSERT_EQ(tokens[1].quote_type, NORMAL);
 
     free_tokens(tokens);
 }
@@ -178,8 +178,8 @@ test_token_with_AND_operator() {
     tokenize(c.command, tokens, MAX_ARGS);
     tokens_to_str_arr(tokens, arr);
 
-    ASSERT_EQ (arr, c.expected_tokens);
-    ASSERT_EQ (tokens[2].token_type, T_AND);
+    ASSERT_EQ(arr, c.expected_tokens);
+    ASSERT_EQ(tokens[2].token_type, T_AND);
 
     free_tokens(tokens);
 }
@@ -195,10 +195,10 @@ test_token_with_OR_operator() {
     tokenize(c.command, tokens, MAX_ARGS);
     tokens_to_str_arr(tokens, arr);
 
-    ASSERT_EQ (arr, c.expected_tokens);
-    ASSERT_EQ (tokens[1].token_type, T_WORD);
-    ASSERT_EQ (tokens[2].token_type, T_OR);
-    ASSERT_EQ (tokens[3].token_type, T_WORD);
+    ASSERT_EQ(arr, c.expected_tokens);
+    ASSERT_EQ(tokens[1].token_type, T_WORD);
+    ASSERT_EQ(tokens[2].token_type, T_OR);
+    ASSERT_EQ(tokens[3].token_type, T_WORD);
 
     free_tokens(tokens);
 }
@@ -214,12 +214,12 @@ test_token_with_pipe_operator() {
     tokenize(c.command, tokens, MAX_ARGS);
     tokens_to_str_arr(tokens, arr);
 
-    ASSERT_EQ (arr, c.expected_tokens);
-    ASSERT_EQ (tokens[0].token_type, T_WORD);
-    ASSERT_EQ (tokens[1].token_type, T_PIPE);
-    ASSERT_EQ (tokens[2].token_type, T_WORD);
-    ASSERT_EQ (tokens[3].token_type, T_PIPE);
-    ASSERT_EQ (tokens[4].token_type, T_WORD);
+    ASSERT_EQ(arr, c.expected_tokens);
+    ASSERT_EQ(tokens[0].token_type, T_WORD);
+    ASSERT_EQ(tokens[1].token_type, T_PIPE);
+    ASSERT_EQ(tokens[2].token_type, T_WORD);
+    ASSERT_EQ(tokens[3].token_type, T_PIPE);
+    ASSERT_EQ(tokens[4].token_type, T_WORD);
 
     free_tokens(tokens);
 }
@@ -235,18 +235,18 @@ test_token_with_redirection_operators() {
     tokenize(c.command, tokens, MAX_ARGS);
     tokens_to_str_arr(tokens, arr);
 
-    ASSERT_EQ (arr, c.expected_tokens);
-    ASSERT_EQ (tokens[0].token_type, T_WORD);
-    ASSERT_EQ (tokens[1].token_type, T_REDIR_OUT);
-    ASSERT_EQ (tokens[2].token_type, T_WORD);
-    ASSERT_EQ (tokens[3].token_type, T_REDIR_OUT);
-    ASSERT_EQ (tokens[4].token_type, T_WORD);
-    ASSERT_EQ (tokens[5].token_type, T_REDIR_ERR_OUT);
-    ASSERT_EQ (tokens[6].token_type, T_WORD);
-    ASSERT_EQ (tokens[7].token_type, T_REDIR_OUT_APPEND);
-    ASSERT_EQ (tokens[8].token_type, T_WORD);
-    ASSERT_EQ (tokens[9].token_type, T_REDIR_ERR_OUT_APPEND);
-    ASSERT_EQ (tokens[10].token_type, T_WORD);
+    ASSERT_EQ(arr, c.expected_tokens);
+    ASSERT_EQ(tokens[0].token_type, T_WORD);
+    ASSERT_EQ(tokens[1].token_type, T_REDIR_OUT);
+    ASSERT_EQ(tokens[2].token_type, T_WORD);
+    ASSERT_EQ(tokens[3].token_type, T_REDIR_OUT);
+    ASSERT_EQ(tokens[4].token_type, T_WORD);
+    ASSERT_EQ(tokens[5].token_type, T_REDIR_ERR_OUT);
+    ASSERT_EQ(tokens[6].token_type, T_WORD);
+    ASSERT_EQ(tokens[7].token_type, T_REDIR_OUT_APPEND);
+    ASSERT_EQ(tokens[8].token_type, T_WORD);
+    ASSERT_EQ(tokens[9].token_type, T_REDIR_ERR_OUT_APPEND);
+    ASSERT_EQ(tokens[10].token_type, T_WORD);
 
     free_tokens(tokens);
 }
