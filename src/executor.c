@@ -106,8 +106,9 @@ static int execute_cmd_node_for_pipe(Node* node) {
 }
 
 
-// Call this function for your own good 🔪
-// And only with command (T_WORD) nodes.
+// Call this function only with command (T_WORD) nodes.
+// Stores the executed command's exit code in shell.exit_code.
+// Always returns.
 static void execute_cmd_node(Node* node) {
     ExeResult ar = apply_redirections(node->cmd.redir_list);
     if (ar == E_FILE_ERROR) {

@@ -39,6 +39,8 @@ void parse_arguments(int argc, char **argv) {
     if (argc <= 1) return;
     int opt;
 
+    // Convert long options to their short equivalents.
+    // Every long option must have a corresponding short option.
     for (int i = 1; i < argc; ++i) {
         if (strcmp(argv[i], "--help") == 0) {
             strcpy(argv[i], "-h");

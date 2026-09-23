@@ -1,7 +1,7 @@
 # Usage:
 #   make             release build (build/release/she)
 #   make asan        release + AddressSanitizer (build/release-asan/she)
-#   make test        build and run unit tests
+#   make test        build and run tests
 #   make test-asan   build and run tests with AddressSanitizer
 #   make clean       delete the build directory
 #   DEBUG=1 make     debug tree instead of release (build/debug)
@@ -9,7 +9,7 @@
 # Compiler, target executable and version
 CC          := gcc
 TARGET      := she
-VERSION     := 0.1.0
+VERSION     := 0.2.0
 
 
 # Source, build and config directories
