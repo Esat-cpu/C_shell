@@ -51,3 +51,15 @@ void* srealloc(void* ptr, size_t new_size) {
 
     return p;
 }
+
+
+char* sstrdup(const char* from) {
+    char* str = strdup(from);
+
+    if (!str) {
+        print_err("strdup", strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
+    return str;
+}

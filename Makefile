@@ -111,6 +111,10 @@ $(TEST_BIN_DIR)/trim_test: $(OBJ_DIR)/$(TEST_DIR)/trim_test.o \
 
 $(TEST_BIN_DIR)/tokenize_test: $(OBJ_DIR)/$(TEST_DIR)/tokenize_test.o \
 								$(OBJ_DIR)/$(SRC_DIR)/tokenize.o \
+								$(OBJ_DIR)/$(SRC_DIR)/token.o \
+								$(OBJ_DIR)/$(SRC_DIR)/util.o \
+								$(OBJ_DIR)/$(SRC_DIR)/str_util.o \
+								$(OBJ_DIR)/$(SRC_DIR)/shell.o \
 								$(OBJ_DIR)/$(TEST_LIB)/test_lib.o
 	@mkdir -p $(@D)
 	$(CC) $(LDFLAGS) $^ -o $@
@@ -120,6 +124,7 @@ $(TEST_BIN_DIR)/expansion_test: $(OBJ_DIR)/$(TEST_DIR)/expansion_test.o \
 								$(OBJ_DIR)/$(TEST_LIB)/test_lib.o \
 								$(OBJ_DIR)/$(SRC_DIR)/expansion.o \
 								$(OBJ_DIR)/$(SRC_DIR)/tokenize.o \
+								$(OBJ_DIR)/$(SRC_DIR)/token.o \
 								$(OBJ_DIR)/$(SRC_DIR)/util.o \
 								$(OBJ_DIR)/$(SRC_DIR)/str_util.o \
 								$(OBJ_DIR)/$(SRC_DIR)/shell.o
@@ -132,7 +137,9 @@ $(TEST_BIN_DIR)/parser_test: $(OBJ_DIR)/$(TEST_DIR)/parser_test.o \
 								$(OBJ_DIR)/$(SRC_DIR)/parser.o \
 								$(OBJ_DIR)/$(SRC_DIR)/ast.o \
 								$(OBJ_DIR)/$(SRC_DIR)/tokenize.o \
+								$(OBJ_DIR)/$(SRC_DIR)/token.o \
 								$(OBJ_DIR)/$(SRC_DIR)/util.o \
+								$(OBJ_DIR)/$(SRC_DIR)/str_util.o \
 								$(OBJ_DIR)/$(SRC_DIR)/shell.o
 	@mkdir -p $(@D)
 	$(CC) $(LDFLAGS) $^ -o $@

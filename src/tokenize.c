@@ -4,15 +4,10 @@
 #include <stdbool.h>
 
 #include "tokenize.h"
+#include "token.h"
+#include "str_util.h"
 
 #define MAX_BUF 4096
-
-
-// Frees strings of tokens
-void free_tokens(Token* tokens) {
-    for (int i = 0; tokens[i].value; ++i)
-        free(tokens[i].value);
-}
 
 
 // Fills a allocated array with only strings of tokens
@@ -24,45 +19,17 @@ void tokens_to_str_arr(Token* tokens, char** arr) {
 }
 
 
-// Inserts a token to token array with given attributes
-static int flush_token(char* buf,
-                        size_t len,
-                        QuoteType status,
-                        Token* tokens,
-                        size_t iter,
-                        TokenType type) {
-    // Allow empty entries in quoted modes but not in NORMAL mode
-    if (len == 0 && status == NORMAL) return 0;
-
-    buf[len] = '\0';
-    tokens[iter].value = strdup(buf);
-    tokens[iter].quote_type = status;
-    tokens[iter].token_type = type;
-    return 1;
-}
-
-
 // tokenize
-size_t tokenize(const char* input, Token* tokens, size_t max_tokens) {
+void tokenize(const char* input, TokenArray* t) {
     QuoteType status = NORMAL;
-    TokenType type = T_WORD;
+    TokenType type   = T_WORD;
     bool escape = false;
-    bool space = true;
+    bool space  = true;
 
-    size_t iter = 0; // for tokens
-
-    char buf[MAX_BUF];
-    size_t len = 0; // for buf
-
+    String str = new_string();
+    *t = new_token_array();
 
     for (const char* ch = input; *ch; ch++) {
-        if (len >= MAX_BUF - 1) {
-            int f = flush_token(buf, len, status, tokens, iter, type);
-            if (f) { iter++; len = 0; }
-        }
-
-        if (iter >= max_tokens - 1) break;
-
         //  If escape status is 1 and the status is NORMAL,
         //+ append the current character as-is and continue.
         //  If the status is DOUBLE_Q,
@@ -72,11 +39,10 @@ size_t tokenize(const char* input, Token* tokens, size_t max_tokens) {
         //+ the space flag will not be changed.
         if (escape) {
             const char* special_characters = "$\"\\";
-            if (status == DOUBLE_Q && !strchr(special_characters, *ch)) {
-                buf[len++] = '\\';
-            }
+            if (status == DOUBLE_Q && !strchr(special_characters, *ch))
+                add_chr_to_str(&str, '\\');
 
-            buf[len++] = *ch;
+            add_chr_to_str(&str, *ch);
             escape = false;
             continue;
         }
@@ -90,7 +56,7 @@ size_t tokenize(const char* input, Token* tokens, size_t max_tokens) {
             // switch escape to special character '\x01' for the
             // parameter expansion.
             if (*(ch+1) == '$') {
-                buf[len++] = '\x01';
+                add_chr_to_str(&str, '\x01');
                 continue;
             }
 
@@ -100,12 +66,10 @@ size_t tokenize(const char* input, Token* tokens, size_t max_tokens) {
 
         // Semicolon case
         if (*ch == ';' && status == NORMAL) {
-            int f = flush_token(buf, len, NORMAL, tokens, iter, type);
-            if (f) { iter++; len = 0; }
+            if (add_token(t, str.data, NORMAL, type))
+                clear_str(&str);
 
-            strcpy(buf, ";");
-            flush_token(buf, strlen(buf), NORMAL, tokens, iter, T_SEMI);
-            iter++;
+            add_token(t, ";", NORMAL, T_SEMI);
             continue;
         }
 
@@ -114,21 +78,17 @@ size_t tokenize(const char* input, Token* tokens, size_t max_tokens) {
         if (*ch == '|' && status == NORMAL) {
             const char *next_ch = ch+1;
 
-            int f = flush_token(buf, len, NORMAL, tokens, iter, type);
-            if (f) { iter++; len = 0; }
+            if (add_token(t, str.data, NORMAL, type))
+                clear_str(&str);
 
             // PIPE Operator (|)
             if (*next_ch != '|') {
-                strcpy(buf, "|");
-                flush_token(buf, strlen(buf), NORMAL, tokens, iter, T_PIPE);
-                iter++;
+                add_token(t, "|", NORMAL, T_PIPE);
                 continue;
             }
             // OR Operator (||)
             else {
-                strcpy(buf, "||");
-                flush_token(buf, strlen(buf), NORMAL, tokens, iter, T_OR);
-                iter++;
+                add_token(t, "||", NORMAL, T_OR);
                 ch++;
                 continue;
             }
@@ -140,12 +100,10 @@ size_t tokenize(const char* input, Token* tokens, size_t max_tokens) {
 
             // AND Operator (&&)
             if (*next_ch == '&') {
-                int f = flush_token(buf, len, NORMAL, tokens, iter, type);
-                if (f) { iter++; len = 0; }
+                if (add_token(t, str.data, NORMAL, type))
+                    clear_str(&str);
 
-                strcpy(buf, "&&");
-                flush_token(buf, strlen(buf), NORMAL, tokens, iter, T_AND);
-                iter++;
+                add_token(t, "&&", NORMAL, T_AND);
                 ch++;
                 continue;
             }
@@ -155,25 +113,18 @@ size_t tokenize(const char* input, Token* tokens, size_t max_tokens) {
         if (*ch == '>' && status == NORMAL) {
             const char *next_ch = ch+1;
 
-            int f = flush_token(buf, len, NORMAL, tokens, iter, type);
-            if (f) { iter++; len = 0; }
-
-            TokenType redir_type;
+            if (add_token(t, str.data, NORMAL, type))
+                clear_str(&str);
 
             // >> operator
             if (*next_ch == '>') {
-                strcpy(buf, ">>");
-                redir_type = T_REDIR_OUT_APPEND;
+                add_token(t, ">>", NORMAL, T_REDIR_OUT_APPEND);
                 ch++;
             }
             // > operator
-            else {
-                strcpy(buf, ">");
-                redir_type = T_REDIR_OUT;
-            }
+            else
+                add_token(t, ">", NORMAL, T_REDIR_OUT);
 
-            flush_token(buf, strlen(buf), NORMAL, tokens, iter, redir_type);
-            iter++;
             continue;
         }
 
@@ -184,43 +135,38 @@ size_t tokenize(const char* input, Token* tokens, size_t max_tokens) {
 
             // If it is a redirection operator
             if (*next_ch == '>') {
-                int f = flush_token(buf, len, NORMAL, tokens, iter, type);
-                if (f) { iter++; len = 0; }
+                if (add_token(t, str.data, NORMAL, type))
+                    clear_str(&str);
 
                 const char *next_next_ch = NULL;
                 if (*next_ch) next_next_ch = next_ch+1;
-                TokenType redir_type;
 
                 // 2>> operator
                 if (next_next_ch && *next_next_ch == '>') {
-                    strcpy(buf, "2>>");
-                    redir_type = T_REDIR_ERR_OUT_APPEND;
+                    add_token(t, "2>>", NORMAL, T_REDIR_ERR_OUT_APPEND);
                     ch += 2;
                 }
                 // 2> operator
                 else {
-                    strcpy(buf, "2>");
-                    redir_type = T_REDIR_ERR_OUT;
+                    add_token(t, "2>", NORMAL, T_REDIR_ERR_OUT);
                     ch++;
                 }
 
-                flush_token(
-                        buf, strlen(buf), NORMAL, tokens, iter, redir_type);
-                iter++;
                 continue;
             }
         }
 
         // comment case
         if (*ch == '#' && space) {
-            tokens[iter].value = NULL;
-            return iter;
+            t->tokens[t->len].value = NULL;
+            free(str.data);
+            return;
         }
 
         // space case in normal mode
         if (*ch == ' ' && status == NORMAL) {
-            int f = flush_token(buf, len, NORMAL, tokens, iter, type);
-            if (f) { iter++; len = 0; }
+            if (add_token(t, str.data, NORMAL, type))
+                clear_str(&str);
 
             space = true;
             continue;
@@ -236,8 +182,8 @@ size_t tokenize(const char* input, Token* tokens, size_t max_tokens) {
             }
 
             if (status == DOUBLE_Q) {
-                int f = flush_token(buf, len, DOUBLE_Q, tokens, iter, type);
-                if (f) { iter++; len = 0; }
+                if (add_token(t, str.data, DOUBLE_Q, type))
+                    clear_str(&str);
 
                 status = NORMAL;
                 continue;
@@ -252,8 +198,8 @@ size_t tokenize(const char* input, Token* tokens, size_t max_tokens) {
             }
 
             if (status == SINGLE_Q) {
-                int f = flush_token(buf, len, SINGLE_Q, tokens, iter, type);
-                if (f) { iter++; len = 0; }
+                if (add_token(t, str.data, SINGLE_Q, type))
+                    clear_str(&str);
 
                 status = NORMAL;
                 continue;
@@ -261,10 +207,10 @@ size_t tokenize(const char* input, Token* tokens, size_t max_tokens) {
         }
 
         // normal character case
-        buf[len++] = *ch;
+        add_chr_to_str(&str, *ch);
     }
 
-    if (flush_token(buf, len, NORMAL, tokens, iter, type)) ++iter;
-    tokens[iter].value = NULL;
-    return iter; // the index of NULL
+    add_token(t, str.data, NORMAL, type);
+    t->tokens[t->len].value = NULL;
+    free(str.data);
 }

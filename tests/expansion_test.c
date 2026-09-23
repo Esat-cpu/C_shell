@@ -1,6 +1,7 @@
 #include <stdlib.h>
 
 #include "test_lib.h"
+#include "token.h"
 #include "tokenize.h"
 #include "expansion.h"
 #include "shell.h"
@@ -14,7 +15,7 @@ typedef struct {
 } TestCase;
 
 
-Token tokens[MAX_ARGS];
+TokenArray ta;
 char* arr[MAX_ARGS];
 
 
@@ -41,14 +42,14 @@ test_param_expansion_with_home_var() {
     };
 
     char *msg = NULL;
-    tokenize(c.command, tokens, MAX_ARGS);
-    expand_param(tokens, &msg);
+    tokenize(c.command, &ta);
+    expand_param(&ta, &msg);
 
-    tokens_to_str_arr(tokens, arr);
+    tokens_to_str_arr(ta.tokens, arr);
 
     ASSERT_EQ(arr, c.expected_args);
 
-    free_tokens(tokens);
+    free_tokens(ta);
 }
 
 
@@ -60,14 +61,14 @@ test_param_expansion_unquoted() {
     };
 
     char *msg = NULL;
-    tokenize(c.command, tokens, MAX_ARGS);
-    expand_param(tokens, &msg);
+    tokenize(c.command, &ta);
+    expand_param(&ta, &msg);
 
-    tokens_to_str_arr(tokens, arr);
+    tokens_to_str_arr(ta.tokens, arr);
 
     ASSERT_EQ(arr, c.expected_args);
 
-    free_tokens(tokens);
+    free_tokens(ta);
 }
 
 
@@ -79,14 +80,14 @@ test_param_expansion_double_quoted() {
     };
 
     char *msg = NULL;
-    tokenize(c.command, tokens, MAX_ARGS);
-    expand_param(tokens, &msg);
+    tokenize(c.command, &ta);
+    expand_param(&ta, &msg);
 
-    tokens_to_str_arr(tokens, arr);
+    tokens_to_str_arr(ta.tokens, arr);
 
     ASSERT_EQ(arr, c.expected_args);
 
-    free_tokens(tokens);
+    free_tokens(ta);
 }
 
 
@@ -98,14 +99,14 @@ test_param_expansion_single_quoted() {
     };
 
     char *msg = NULL;
-    tokenize(c.command, tokens, MAX_ARGS);
-    expand_param(tokens, &msg);
+    tokenize(c.command, &ta);
+    expand_param(&ta, &msg);
 
-    tokens_to_str_arr(tokens, arr);
+    tokens_to_str_arr(ta.tokens, arr);
 
     ASSERT_EQ(arr, c.expected_args);
 
-    free_tokens(tokens);
+    free_tokens(ta);
 }
 
 
@@ -117,14 +118,14 @@ test_param_expansion_with_slash() {
     };
 
     char *msg = NULL;
-    tokenize(c.command, tokens, MAX_ARGS);
-    expand_param(tokens, &msg);
+    tokenize(c.command, &ta);
+    expand_param(&ta, &msg);
 
-    tokens_to_str_arr(tokens, arr);
+    tokens_to_str_arr(ta.tokens, arr);
 
     ASSERT_EQ(arr, c.expected_args);
 
-    free_tokens(tokens);
+    free_tokens(ta);
 }
 
 
@@ -138,14 +139,14 @@ test_param_expansion_exit_code() {
     };
 
     char *msg = NULL;
-    tokenize(c.command, tokens, MAX_ARGS);
-    expand_param(tokens, &msg);
+    tokenize(c.command, &ta);
+    expand_param(&ta, &msg);
 
-    tokens_to_str_arr(tokens, arr);
+    tokens_to_str_arr(ta.tokens, arr);
 
     ASSERT_EQ(arr, c.expected_args);
 
-    free_tokens(tokens);
+    free_tokens(ta);
 }
 
 
@@ -158,14 +159,14 @@ test_param_expansion_digits() {
     };
 
     char *msg = NULL;
-    tokenize(c.command, tokens, MAX_ARGS);
-    expand_param(tokens, &msg);
+    tokenize(c.command, &ta);
+    expand_param(&ta, &msg);
 
-    tokens_to_str_arr(tokens, arr);
+    tokens_to_str_arr(ta.tokens, arr);
 
     ASSERT_EQ(arr, c.expected_args);
 
-    free_tokens(tokens);
+    free_tokens(ta);
 }
 
 
@@ -177,14 +178,14 @@ test_param_expansion_dollar_sign_as_literal() {
     };
 
     char *msg = NULL;
-    tokenize(c.command, tokens, MAX_ARGS);
-    expand_param(tokens, &msg);
+    tokenize(c.command, &ta);
+    expand_param(&ta, &msg);
 
-    tokens_to_str_arr(tokens, arr);
+    tokens_to_str_arr(ta.tokens, arr);
 
     ASSERT_EQ(arr, c.expected_args);
 
-    free_tokens(tokens);
+    free_tokens(ta);
 }
 
 
@@ -198,14 +199,14 @@ test_param_expansion_undeclared_var() {
     };
 
     char *msg = NULL;
-    tokenize(c.command, tokens, MAX_ARGS);
-    expand_param(tokens, &msg);
+    tokenize(c.command, &ta);
+    expand_param(&ta, &msg);
 
-    tokens_to_str_arr(tokens, arr);
+    tokens_to_str_arr(ta.tokens, arr);
 
     ASSERT_EQ(arr, c.expected_args);
 
-    free_tokens(tokens);
+    free_tokens(ta);
 }
 
 
@@ -217,14 +218,14 @@ test_param_expansion_with_braces() {
     };
 
     char *msg = NULL;
-    tokenize(c.command, tokens, MAX_ARGS);
-    expand_param(tokens, &msg);
+    tokenize(c.command, &ta);
+    expand_param(&ta, &msg);
 
-    tokens_to_str_arr(tokens, arr);
+    tokens_to_str_arr(ta.tokens, arr);
 
     ASSERT_EQ(arr, c.expected_args);
 
-    free_tokens(tokens);
+    free_tokens(ta);
 }
 
 

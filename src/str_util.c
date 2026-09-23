@@ -4,7 +4,7 @@
 #include "str_util.h"
 #include "util.h"
 
-#define START_BUFFER_SIZE 256
+#define START_BUFFER_SIZE 128
 
 
 static void ensure_capacity(String* str, size_t n) {
@@ -22,8 +22,8 @@ String new_string(void) {
 
     str.data = smalloc(START_BUFFER_SIZE);
     str.cap = START_BUFFER_SIZE;
-    str.data[0] = '\0';
     str.len = 0;
+    str.data[0] = '\0';
 
     return str;
 }
@@ -73,4 +73,10 @@ void add_int_to_str(String *str, int num) {
         str->data[str->len++] = *ch;
 
     str->data[str->len] = '\0';
+}
+
+
+void clear_str(String *str) {
+    str->len = 0;
+    str->data[0] = '\0';
 }

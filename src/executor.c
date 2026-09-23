@@ -308,14 +308,14 @@ ExeResult execute_line(char* line, char **error_out) {
     if (line[0] == '\0' || line[0] == '#')
         return E_SUCCESS;
 
-    Token tokens[MAX_TOKENS];
+    TokenArray ta;
     Node* root = NULL;
 
-    size_t token_count = tokenize(line, tokens, MAX_TOKENS);
+    tokenize(line, &ta);
 
-    int e = expand_param(tokens, error_out);
+    int e = expand_param(&ta, error_out);
     if (e) {
-        free_tokens(tokens);
+        free_tokens(ta);
 
         if (shell.exit_code == 0)
             shell.exit_code = EXIT_FAILURE;
@@ -323,10 +323,10 @@ ExeResult execute_line(char* line, char **error_out) {
         return E_PARSE_ERROR;
     }
 
-    root = parse(tokens, token_count, error_out);
+    root = parse(ta.tokens, ta.len, error_out);
 
     if (root == NULL) {
-        free_tokens(tokens);
+        free_tokens(ta);
 
         if (shell.exit_code == 0)
             shell.exit_code = EXIT_FAILURE;
@@ -337,7 +337,7 @@ ExeResult execute_line(char* line, char **error_out) {
     execute_ast(root);
 
     free_ast(root);
-    free_tokens(tokens);
+    free_tokens(ta);
 
     return E_SUCCESS;
 }

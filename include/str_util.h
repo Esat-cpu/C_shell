@@ -21,4 +21,6 @@ void add_span_to_str(String *str, char *start, char *end);
 
 void add_int_to_str(String *str, int num);
 
+void clear_str(String *str);
+
 #endif

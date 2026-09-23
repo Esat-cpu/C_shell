@@ -5,7 +5,6 @@
 #include <ctype.h>
 
 #include "expansion.h"
-#include "tokenize.h"
 #include "str_util.h"
 #include "util.h"
 #include "shell.h"
@@ -132,8 +131,8 @@ static int expand_param_in_token(Token* token, char **error_out) {
 }
 
 
-int expand_param(Token* tokens, char **error_out) {
-    for_each_token (token, tokens) {
+int expand_param(TokenArray* ta, char **error_out) {
+    for_each_token (token, ta) {
         if (strchr(token->value, '$') && token->quote_type != SINGLE_Q) {
             int e = expand_param_in_token(token, error_out);
             if (e) return e;
