@@ -72,18 +72,18 @@ static char* expand_param_in_one_expr(char* start, String* str) {
 
 static int expand_param_in_token(Token* token, char **error_out) {
     // New buffer for expanded token value
-    String* str = new_string();
+    String str = new_string();
 
     char *ch    = token->value;
     char *start = token->value;
 
     while ((ch = next_dollar_sign(ch))) {
-        add_span_to_str(str, start, ch);
+        add_span_to_str(&str, start, ch);
 
         // Escape case
         if (*ch == '\x01') {
             ch++;
-            add_chr_to_str(str, *ch);
+            add_chr_to_str(&str, *ch);
             ch++;
         }
 
@@ -94,13 +94,12 @@ static int expand_param_in_token(Token* token, char **error_out) {
             // ${PARAM} case
             if (*ch == '{') {
                 ch++;
-                pos = expand_param_in_one_expr(ch, str);
+                pos = expand_param_in_one_expr(ch, &str);
 
                 // Abort expansion on unclosed '{' so the whole line
                 // is skipped.
                 if (*pos != '}') {
-                    free(str->data);
-                    free(str);
+                    free(str.data);
 
                     *error_out = smalloc(64);
                     snprintf(*error_out, 64, "Parse error, expected '}'");
@@ -112,11 +111,11 @@ static int expand_param_in_token(Token* token, char **error_out) {
 
             // $PARAM case
             else {
-                pos = expand_param_in_one_expr(ch, str);
+                pos = expand_param_in_one_expr(ch, &str);
 
                 // If no case matches, take the dollar sign as-is
                 if (pos == ch)
-                    add_chr_to_str(str, '$');
+                    add_chr_to_str(&str, '$');
                 else
                     ch = pos;
             }
@@ -125,11 +124,10 @@ static int expand_param_in_token(Token* token, char **error_out) {
         start = ch;
     }
 
-    add_slice_to_str(str, start);
+    add_slice_to_str(&str, start);
 
     free(token->value);
-    token->value = str->data;
-    free(str);
+    token->value = str.data;
     return 0;
 }
 

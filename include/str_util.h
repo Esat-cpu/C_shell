@@ -11,7 +11,7 @@ typedef struct {
 } String;
 
 
-String* new_string(void);
+String new_string(void);
 
 void add_chr_to_str(String *str, char ch);
 

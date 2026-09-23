@@ -17,13 +17,13 @@ static void ensure_capacity(String* str, size_t n) {
 }
 
 
-String* new_string(void) {
-    String* str = smalloc(sizeof(String));
+String new_string(void) {
+    String str;
 
-    str->data = smalloc(START_BUFFER_SIZE);
-    str->cap = START_BUFFER_SIZE;
-    str->data[0] = '\0';
-    str->len = 0;
+    str.data = smalloc(START_BUFFER_SIZE);
+    str.cap = START_BUFFER_SIZE;
+    str.data[0] = '\0';
+    str.len = 0;
 
     return str;
 }
