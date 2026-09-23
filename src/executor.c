@@ -265,6 +265,9 @@ static void execute_ast(Node* root) {
     else if (root->type == T_SEMI) {
         execute_ast(root->operator.left);
 
+        if (shell.errexit && shell.exit_code != 0)
+            exit(shell.exit_code);
+
         if (root->operator.right)
             execute_ast(root->operator.right);
     }

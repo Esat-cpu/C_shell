@@ -184,6 +184,9 @@ int main(int argc, char** argv) {
             print_err(error_message, NULL);
             free(error_message);
         }
+
+        if (shell.errexit && shell.exit_code != 0)
+            exit(shell.exit_code);
     }
 
     return 0;

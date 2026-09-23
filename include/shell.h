@@ -28,6 +28,8 @@ struct ShellState {
 
     // Shell interactive mode
     bool interactive;
+    // If true, the shell exits on certain command failures
+    bool errexit;
 };
 
 
