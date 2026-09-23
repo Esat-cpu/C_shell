@@ -141,3 +141,11 @@ def test_file_error_sets_exit_code(run_with_she, tmp_path):
     res = run_with_she(command, cwd=tmp_path)
 
     assert res.returncode != 0
+
+
+def test_input_from_pipe(she_path, run_with_she):
+    command = f"echo 'echo helo\necho world' | {she_path}"
+    res = run_with_she(command)
+
+    assert res.stdout == "helo\nworld\n"
+    assert res.stderr == ""

@@ -148,6 +148,7 @@ int main(int argc, char** argv) {
     if (args.should_exit)
         exit(shell.exit_code);
 
+    size_t size = 0;
 
     while (1) {
         if (shell.interactive) {
@@ -166,7 +167,6 @@ int main(int argc, char** argv) {
             add_history(command);
         }
         else {
-            size_t size = 0;
             ssize_t len = getline(&command, &size, stdin);
 
             if (len == -1) {
