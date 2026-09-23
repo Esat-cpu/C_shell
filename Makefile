@@ -151,9 +151,12 @@ test-unit-asan:
 test-py: $(TARGET_EXEC)
 	pytest $(TEST_DIR)/integration --she-path $(TARGET_EXEC)
 
+test-py-asan:
+	$(MAKE) test-py ASAN=1
+
 test: test-unit test-py
 
-test-asan: test-unit-asan test-py
+test-asan: test-unit-asan test-py-asan
 
 # Clean build
 clean:
