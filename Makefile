@@ -9,7 +9,7 @@
 # Compiler, target executable and version
 CC          := gcc
 TARGET      := she
-VERSION     := 0.2.0
+VERSION     := 0.3.0
 
 
 # Source, build and config directories

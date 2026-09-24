@@ -19,20 +19,27 @@
 #include "shell.h"
 
 #define MAX_LINE_SIZE 4096
-#define MAX_TOKENS 256
 
 
 // Set open flags and target fd according to redir_type.
-static void collect_redir_config(RedirList* r, int *flags, int *targetfd) {
+static void collect_redir_config(RedirList* r, int *flags) {
+    /* open flags */
     if (r->redir_type == T_REDIR_OUT || r->redir_type == T_REDIR_ERR_OUT)
         *flags = O_WRONLY | O_CREAT | O_TRUNC;
+
+    else if (r->redir_type == T_REDIR_IN)
+        *flags = O_RDONLY;
+
     else
         *flags = O_WRONLY | O_CREAT | O_APPEND;
 
+    /* targetfd */
     if (r->redir_type == T_REDIR_OUT || r->redir_type == T_REDIR_OUT_APPEND)
-        *targetfd = STDOUT_FILENO;
+        r->targetfd = STDOUT_FILENO;
+    else if (r->redir_type == T_REDIR_IN)
+        r->targetfd = STDIN_FILENO;
     else
-        *targetfd = STDERR_FILENO;
+        r->targetfd = STDERR_FILENO;
 }
 
 
@@ -41,7 +48,7 @@ static ExeResult apply_redirections(RedirList* r) {
     int flags;
 
     while (r) {
-        collect_redir_config(r, &flags, &r->targetfd);
+        collect_redir_config(r, &flags);
         r->savedfd = dup(r->targetfd);
 
         int fd = open(r->filename, flags, 0644);

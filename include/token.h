@@ -26,6 +26,7 @@ typedef enum {
     T_REDIR_OUT_APPEND,
     T_REDIR_ERR_OUT,
     T_REDIR_ERR_OUT_APPEND,
+    T_REDIR_IN,
 } TokenType;
 
 

@@ -156,6 +156,16 @@ void tokenize(const char* input, TokenArray* t) {
             }
         }
 
+        // Redirection in
+        // < operator
+        if (*ch == '<' && status == NORMAL) {
+            if (add_token(t, str.data, NORMAL, type))
+                clear_str(&str);
+
+            add_token(t, "<", NORMAL, T_REDIR_IN);
+            continue;
+        }
+
         // comment case
         if (*ch == '#' && space) {
             t->tokens[t->len].value = NULL;

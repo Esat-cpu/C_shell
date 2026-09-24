@@ -1,5 +1,7 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 #include <string.h>
 #include <limits.h>
 #include <errno.h>
@@ -19,7 +21,7 @@ int cd(int argc, char** argv) {
             return EXIT_FAILURE;
         }
         else
-            strncpy(new_path, shell.home, PATH_MAX);
+            snprintf(new_path, PATH_MAX, "%s", shell.home);
     }
 
     else if (argc > 2) {
@@ -29,9 +31,9 @@ int cd(int argc, char** argv) {
 
     else {
         if (strcmp(argv[1], "-") == 0)
-            strncpy(new_path, shell.oldpwd, PATH_MAX);
+            snprintf(new_path, PATH_MAX, "%s", shell.oldpwd);
         else
-            strncpy(new_path, argv[1], PATH_MAX);
+            snprintf(new_path, PATH_MAX, "%s", argv[1]);
     }
 
     //change dir
@@ -42,7 +44,7 @@ int cd(int argc, char** argv) {
         return EXIT_FAILURE;
     }
     else {
-        strncpy(shell.oldpwd, shell.cwd, PATH_MAX);
+        snprintf(shell.oldpwd, PATH_MAX, "%s", shell.cwd);
 
         if (getcwd(shell.cwd, PATH_MAX) == NULL) {
             print_err("cd", strerror(errno));
