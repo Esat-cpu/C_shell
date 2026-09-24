@@ -177,7 +177,27 @@ static void expand_glob_in_token(Token* token) {
 }
 
 
+/* Tilde Expansion */
+static void expand_tilde(TokenArray* ta) {
+    if (!shell.home) return;
+
+    for_each_token (t, ta) {
+        if (t->quote_type == NORMAL && t->value[0] == '~'
+                && (!t->value[1] || !isalnum((unsigned char)t->value[1])))
+        {
+            String str = new_string();
+            add_slice_to_str(&str, (char*)shell.home);
+            add_slice_to_str(&str, &t->value[1]);
+            free(t->value);
+            t->value = str.data;
+        }
+    }
+}
+
+
 int expand_param(TokenArray* ta, char **error_out) {
+    expand_tilde(ta);
+
     for_each_token (token, ta) {
         if (strchr(token->value, '$') && token->quote_type != SINGLE_Q) {
             int e = expand_param_in_token(token, error_out);
