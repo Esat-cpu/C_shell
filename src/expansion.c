@@ -6,8 +6,35 @@
 
 #include "expansion.h"
 #include "str_util.h"
+#include "token.h"
 #include "util.h"
 #include "shell.h"
+
+
+// Traverse the token array and apply word splitting to unquoted tokens:
+// - Split words on spaces
+// - Remove empty unquoted words
+static void split_normal_words(TokenArray* ta) {
+    TokenArray ta_new = new_token_array();
+
+    for_each_token (t, ta) {
+        if (t->quote_type == NORMAL) {
+            if (t->value[0] == '\0')
+                continue;
+
+            char *c = strtok(t->value, " \t");
+            add_token(&ta_new, c, NORMAL, t->token_type);
+
+            while ((c = strtok(NULL, " ")))
+                add_token(&ta_new, c, NORMAL, t->token_type);
+        }
+        else
+            add_token(&ta_new, t->value, t->quote_type, t->token_type);
+    }
+
+    free_tokens(*ta);
+    *ta = ta_new;
+}
 
 
 // Finds dollar signs and the special escape character that is
@@ -138,5 +165,7 @@ int expand_param(TokenArray* ta, char **error_out) {
             if (e) return e;
         }
     }
+
+    split_normal_words(ta);
     return 0;
 }

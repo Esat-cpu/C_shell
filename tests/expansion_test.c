@@ -22,6 +22,7 @@ char* arr[MAX_ARGS];
 static void
 set_up() {
     setenv("TEST_ENV_VAR", "test", 1);
+    setenv("TEST_ENV_VAR_SPACE", "test word", 1);
 
     static char* argv[3] = {"shell", "test_arg", NULL};
 
@@ -56,8 +57,8 @@ test_param_expansion_with_home_var() {
 static void
 test_param_expansion_unquoted() {
     TestCase c = {
-        "echo $TEST_ENV_VAR",
-        {"echo", "test", NULL},
+        "echo $TEST_ENV_VAR $TEST_ENV_VAR_SPACE",
+        {"echo", "test", "test", "word", NULL},
     };
 
     char *msg = NULL;
@@ -75,8 +76,8 @@ test_param_expansion_unquoted() {
 static void
 test_param_expansion_double_quoted() {
     TestCase c = {
-        "echo \"$TEST_ENV_VAR\"",
-        {"echo", "test", NULL},
+        "echo \"$TEST_ENV_VAR\" \"$TEST_ENV_VAR_SPACE\"",
+        {"echo", "test", "test word", NULL},
     };
 
     char *msg = NULL;
@@ -113,8 +114,8 @@ test_param_expansion_single_quoted() {
 static void
 test_param_expansion_with_slash() {
     TestCase c = {
-        "echo /hello/$TEST_ENV_VAR/world",
-        {"echo", "/hello/test/world", NULL},
+        "echo /hello/$TEST_ENV_VAR/world /h/$TEST_ENV_VAR_SPACE/w",
+        {"echo", "/hello/test/world", "/h/test", "word/w", NULL},
     };
 
     char *msg = NULL;
@@ -155,7 +156,7 @@ static void
 test_param_expansion_digits() {
     TestCase c = {
         "echo $1 $2 foo$42bar",
-        {"echo", "test_arg", "", "foobar", NULL},
+        {"echo", "test_arg", "foobar", NULL},
     };
 
     char *msg = NULL;
@@ -195,7 +196,7 @@ test_param_expansion_undeclared_var() {
 
     TestCase c = {
         "echo $UNDECLARED_TEST_VAR",
-        {"echo", "", NULL},
+        {"echo", NULL},
     };
 
     char *msg = NULL;
@@ -214,7 +215,7 @@ static void
 test_param_expansion_with_braces() {
     TestCase c = {
         "echo ${TEST_ENV_VAR} ${1} ${} \\${2}",
-        {"echo", "test", "test_arg", "", "${2}", NULL},
+        {"echo", "test", "test_arg", "${2}", NULL},
     };
 
     char *msg = NULL;

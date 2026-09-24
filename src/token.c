@@ -47,7 +47,7 @@ int add_token(TokenArray* t, char* value,
 
 
 void free_tokens(TokenArray ta) {
-    for_each_token(t, &ta)
+    for_each_token (t, &ta)
         free(t->value);
     free(ta.tokens);
 }
