@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <glob.h>
 
 #include "expansion.h"
 #include "str_util.h"
@@ -126,9 +127,7 @@ static int expand_param_in_token(Token* token, char **error_out) {
                 // is skipped.
                 if (*pos != '}') {
                     free(str.data);
-
-                    *error_out = smalloc(64);
-                    snprintf(*error_out, 64, "Parse error, expected '}'");
+                    *error_out = sstrdup("Parse error, expected '}'");
                     return -1;
                 }
 
@@ -158,12 +157,33 @@ static int expand_param_in_token(Token* token, char **error_out) {
 }
 
 
+/* Glob Expansion */
+static void expand_glob_in_token(Token* token) {
+    glob_t globbuf;
+    String str = new_string();
+
+    glob(token->value, GLOB_NOCHECK, NULL, &globbuf);
+
+    for (size_t i = 0; i < globbuf.gl_pathc; ++i) {
+        add_chr_to_str(&str, ' ');
+        add_slice_to_str(&str, globbuf.gl_pathv[i]);
+    }
+
+    globfree(&globbuf);
+    free(token->value);
+    token->value = str.data;
+}
+
+
 int expand_param(TokenArray* ta, char **error_out) {
     for_each_token (token, ta) {
         if (strchr(token->value, '$') && token->quote_type != SINGLE_Q) {
             int e = expand_param_in_token(token, error_out);
             if (e) return e;
         }
+
+        if (token->quote_type == NORMAL)
+            expand_glob_in_token(token);
     }
 
     split_normal_words(ta);
