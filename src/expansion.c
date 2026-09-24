@@ -24,9 +24,11 @@ static void split_normal_words(TokenArray* ta) {
                 continue;
 
             char *c = strtok(t->value, " \t");
+            if (!c) continue;
+
             add_token(&ta_new, c, NORMAL, t->token_type);
 
-            while ((c = strtok(NULL, " ")))
+            while ((c = strtok(NULL, " \t")))
                 add_token(&ta_new, c, NORMAL, t->token_type);
         }
         else
