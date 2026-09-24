@@ -11,6 +11,7 @@
 #include "executor.h"
 #include "util.h"
 #include "tokenize.h"
+#include "token.h"
 #include "ast.h"
 #include "parser.h"
 #include "expansion.h"

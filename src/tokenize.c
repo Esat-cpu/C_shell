@@ -177,6 +177,9 @@ void tokenize(const char* input, TokenArray* t) {
         // double quote case
         if (*ch == '"') {
             if (status == NORMAL) {
+                if (add_token(t, str.data, NORMAL, type))
+                    clear_str(&str);
+
                 status = DOUBLE_Q;
                 continue;
             }
@@ -193,6 +196,9 @@ void tokenize(const char* input, TokenArray* t) {
         // single quote case
         if (*ch == '\'') {
             if (status == NORMAL) {
+                if (add_token(t, str.data, NORMAL, type))
+                    clear_str(&str);
+
                 status = SINGLE_Q;
                 continue;
             }
