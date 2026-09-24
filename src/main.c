@@ -7,6 +7,7 @@
 #include <signal.h>
 #include <stdbool.h>
 #include <pwd.h>
+#include <fcntl.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
@@ -26,12 +27,16 @@ static const char* RC_FILE = ".sherc";
 
 static char* command = NULL;
 static volatile sig_atomic_t in_readline = false;
+static int title_fd = -1;
 
 
 static void clean_exit(void) {
     free(command);
 
     if (shell.interactive) {
+        if (title_fd != -1)
+            close(title_fd);
+
         char history_file[PATH_MAX];
 
         if (shell.home && HIS_FILE) {
@@ -83,6 +88,7 @@ static void setup(int argc, char** argv) {
     if (isatty(STDIN_FILENO)) {
         shell.interactive = true;
         signal(SIGINT, sigint_handler);
+        title_fd = open("/dev/tty", O_WRONLY);
     }
     else
         shell.interactive = false;
@@ -155,6 +161,10 @@ int main(int argc, char** argv) {
             char prompt[PATH_MAX];
             prompt_build(prompt, PATH_MAX);
 
+            // Set/Reset terminal title before prompt.
+            if (title_fd != -1)
+                dprintf(title_fd, "\033]0;she\007");
+
             free(command);
 
             in_readline = 1;
@@ -163,6 +173,10 @@ int main(int argc, char** argv) {
 
             if (!command)
                 exit(shell.exit_code);
+
+            // Set terminal title to running command.
+            if (title_fd != -1)
+                dprintf(title_fd, "\033]0;%s\007", command);
 
             add_history(command);
         }
