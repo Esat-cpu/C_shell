@@ -5,11 +5,13 @@
 #include "shell.h"
 
 
-int set(char** argv) {
-    if (strcmp(argv[1], "-e") == 0)
-        shell.errexit = true;
-    else if (strcmp(argv[1], "+e") == 0)
-        shell.errexit = false;
+int set(int argc, char** argv) {
+    if (argc > 1) {
+        if (strcmp(argv[1], "-e") == 0)
+            shell.errexit = true;
+        else if (strcmp(argv[1], "+e") == 0)
+            shell.errexit = false;
+    }
 
     return 0;
 }

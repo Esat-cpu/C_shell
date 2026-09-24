@@ -1,7 +1,7 @@
 #ifndef AST_H
 #define AST_H
 
-#include "tokenize.h"
+#include "token.h"
 
 /* Redirection List */
 
@@ -28,6 +28,7 @@ typedef struct Node {
 
     union {
         struct {
+            int argc;
             char** argv;
             RedirList* redir_list;
         } cmd;

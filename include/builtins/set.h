@@ -1,6 +1,6 @@
 #ifndef SET_H
 #define SET_H
 
-int set(char** argv);
+int set(int argc, char** argv);
 
 #endif

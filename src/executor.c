@@ -88,7 +88,7 @@ static int execute_cmd_node_for_pipe(Node* node) {
     // Execute with function if the command matches a builtin
     for (size_t i = 0; builtins[i].func; ++i) {
         if (strcmp(node->cmd.argv[0], builtins[i].cmd_name) == 0) {
-            int exit_code = builtins[i].func(node->cmd.argv);
+            int exit_code = builtins[i].func(node->cmd.argc, node->cmd.argv);
             return exit_code;
         }
     }
@@ -119,7 +119,7 @@ static void execute_cmd_node(Node* node) {
 
     for (size_t i = 0; builtins[i].func; ++i) {
         if (strcmp(node->cmd.argv[0], builtins[i].cmd_name) == 0) {
-            shell.exit_code = builtins[i].func(node->cmd.argv);
+            shell.exit_code = builtins[i].func(node->cmd.argc, node->cmd.argv);
             restore_redirections(node->cmd.redir_list);
             return;
         }

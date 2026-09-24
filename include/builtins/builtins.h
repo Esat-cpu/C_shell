@@ -3,7 +3,7 @@
 
 struct Builtin {
     const char* cmd_name;
-    int (*func)(char** argv);
+    int (*func)(int argc, char** argv);
 };
 
 extern struct Builtin builtins[];

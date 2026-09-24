@@ -2,11 +2,12 @@
 #include <stdlib.h>
 
 #include "builtins/exit_builtin.h"
+#include "util.h"
 #include "shell.h"
 
 
-int exit_builtin(char** args) {
-    if (args[1] != NULL) {
+int exit_builtin(int argc, char** args) {
+    if (argc > 1) {
         char *endptr;
         long val = strtol(args[1], &endptr, 10);
 
@@ -18,12 +19,12 @@ int exit_builtin(char** args) {
             shell.exit_code = 2;
             exit(shell.exit_code);
         }
-
-        if (args[2] != NULL) {
-            fprintf(stderr, "exit: Too many arguments.\n");
-            return EXIT_FAILURE;
-        }
     }
+
+    if (argc > 2) {
+        print_err("exit", "too many arguments");
+        return EXIT_FAILURE;
+    }
+
     exit(shell.exit_code);
 }
-

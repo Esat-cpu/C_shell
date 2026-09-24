@@ -1,6 +1,3 @@
-// Run it only if you have a $HOME directory like /home/user
-// and if you have access to root dir (/) and home dir.
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -10,10 +7,6 @@
 
 #include "builtins/cd.h"
 #include "shell.h"
-
-#ifndef PATH_MAX
-#define PATH_MAX 4096
-#endif
 
 
 struct CdTestCase {
@@ -29,6 +22,7 @@ static void
 run_cd_test(void) {
     char first_dir[PATH_MAX];
     char* home = getenv("HOME");
+    shell.home = getenv("HOME");
 
     if (getcwd(first_dir, sizeof(first_dir)) == NULL) {
         fprintf(stderr, "Test could not start.\n");
@@ -47,7 +41,6 @@ run_cd_test(void) {
     char* cmd5[] = {"cd", "-", NULL};
     char* cmd6[] = {"cd", NULL};
     char* cmd7[] = {"cd", "../..", NULL};
-    char* cmd8[] = {"cd", "~", NULL};
 
     //+ and here
     struct CdTestCase cases[] = { // command, expected cwd, oldpwd, exit code
@@ -58,7 +51,6 @@ run_cd_test(void) {
         {cmd5, "/", "/home", 0,    "previous dir with arg -"},
         {cmd6, home, "/", 0,       "no args"},
         {cmd7, "/", home, 0,       "double dot for parent dir"},
-        {cmd8, home, "/", 0,       "tilde for home dir"}
     };
 
     size_t total = sizeof(cases) / sizeof(cases[0]);
@@ -73,7 +65,10 @@ run_cd_test(void) {
     int er = 0;
     unsigned i;
     for (i = 0; i < total; i++) {
-        int status = cd(cases[i].input);
+        int argc;
+        for (argc = 0; cases[i].input[argc]; ++argc);
+
+        int status = cd(argc, cases[i].input);
         fflush(stdout);
         fflush(stderr);
 

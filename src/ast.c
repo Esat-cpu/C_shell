@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 #include "ast.h"
-#include "tokenize.h"
+#include "token.h"
 #include "util.h"
 
 
@@ -79,15 +79,15 @@ Node* make_cmd_node(Token* tokens,
 
     Node* node = smalloc(sizeof(Node));
     node->type = T_WORD;
+    node->cmd.argc = 0;
     node->cmd.argv = smalloc(sizeof(char*) * (count + 1));
     node->cmd.redir_list = NULL;
 
-    size_t ind = 0;
     size_t i = start;
     while (i < end) {
         // Command words and redirection operators may be interleaved.
         if (tokens[i].token_type == T_WORD)
-            node->cmd.argv[ind++] = tokens[i++].value;
+            node->cmd.argv[node->cmd.argc++] = tokens[i++].value;
 
         else {
             char* e = collect_redirection(tokens, &i, end, node);
@@ -99,9 +99,9 @@ Node* make_cmd_node(Token* tokens,
         }
     }
 
-    node->cmd.argv[ind] = NULL;
+    node->cmd.argv[node->cmd.argc] = NULL;
 
-    if (ind == 0) {
+    if (node->cmd.argc == 0) {
         *error_out = smalloc(64);
 
         const char* near = (i > 0) ? tokens[i-1].value : tokens[i].value;
