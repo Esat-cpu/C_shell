@@ -82,7 +82,9 @@ static void setup(int argc, char** argv) {
 
     struct passwd* pw = getpwuid(getuid());
 
-    shell.home = pw->pw_dir;
+    if (!(shell.home = getenv("HOME")))
+        shell.home = pw->pw_dir;
+
     shell.user = pw->pw_name;
 
     if (isatty(STDIN_FILENO)) {
@@ -157,6 +159,8 @@ int main(int argc, char** argv) {
     size_t size = 0;
 
     while (1) {
+        shell.home = getenv("HOME");
+
         if (shell.interactive) {
             char prompt[PATH_MAX];
             prompt_build(prompt, PATH_MAX);
